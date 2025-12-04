@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Universal Travel Planner</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* 🎨 通用版可愛配色 */
+            --bg-color: #FFFCF5;        
+            --text-main: #594A42;       
+            --text-sub: #8C7B75;        
+            
+            --accent-pink: #FFB7B2;     
+            --accent-green: #AACD6E;    
+            --accent-yellow: #FFD966;   
+            --accent-blue: #89CFF0;     
+            --accent-orange: #FFDAC1;   
+            
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --safe-bottom: env(safe-area-inset-bottom);
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            overflow: hidden;
+            font-family: 'Zen Maru Gothic', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            -webkit-tap-highlight-color: transparent;
+            background-image: 
+                linear-gradient(var(--bg-color) 95%, transparent 95%),
+                linear-gradient(90deg, var(--bg-color) 95%, transparent 95%),
+                linear-gradient(#E8E0D5 1px, transparent 1px),
+                linear-gradient(90deg, #E8E0D5 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 20px 20px, 20px 20px;
+            background-position: 0 0, 0 0, -1px -1px, -1px -1px;
+        }
+
+        #root {
+            height: 100dvh; 
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .scroll-container {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: calc(100px + var(--safe-bottom));
+            position: relative;
+            z-index: 10;
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .tab-bar-glass {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 2px solid #F0E6DD;
+            box-shadow: 0 -8px 20px rgba(89, 74, 66, 0.05);
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+            border-radius: 24px 24px 0 0;
+        }
+
+        .sticky-note {
+            background-color: #FFFAEE;
+            border: 2px dashed var(--accent-yellow);
+            padding: 12px 14px;
+            margin-top: 10px;
+            border-radius: 12px;
+            box-shadow: 2px 2px 0px rgba(255, 217, 102, 0.4);
+            font-size: 0.9rem;
+            color: var(--text-main);
+            line-height: 1.6;
+            position: relative;
+        }
+        .sticky-note::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid #E0E0E0;
+            transform: rotate(-2deg);
+        }
+        
+        .sticker {
+            position: absolute;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.2; 
+            filter: saturate(1.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .bg-sticker-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .page-enter { animation: pageSlideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        @keyframes pageSlideUp { 
+            0% { opacity: 0; transform: translateY(30px) scale(0.95); } 
+            100% { opacity: 1; transform: translateY(0) scale(1); } 
+        }
+
+        .stagger-item { opacity: 0; animation: itemPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        @keyframes itemPop { 
+            from { opacity: 0; transform: scale(0.9) translateY(10px); } 
+            to { opacity: 1; transform: scale(1) translateY(0); } 
+        }
+
+        @keyframes modalPop {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .animate-modal { animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+        .input-cute {
+            background: #FFF;
+            border: 2px solid #F0E6DD;
+            border-radius: 16px;
+            padding: 14px 16px;
+            width: 100%;
+            outline: none;
+            font-size: 1rem;
+            color: var(--text-main);
+            font-weight: 700;
+            transition: all 0.3s;
+            margin-bottom: 12px;
+            box-shadow: inset 2px 2px 4px rgba(0,0,0,0.02);
+        }
+        .input-cute:focus { 
+            border-color: var(--accent-blue); 
+            box-shadow: 0 0 0 4px rgba(137, 207, 240, 0.2);
+        }
+
+        .card-cute {
+            background: var(--card-bg);
+            border-radius: 24px;
+            border: 2px solid #FFF;
+            box-shadow: 4px 4px 10px rgba(89, 74, 66, 0.05), -4px -4px 10px rgba(255,255,255,0.8);
+            backdrop-filter: blur(8px);
+        }
+
+        .btn-pill {
+            border-radius: 99px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-pill:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 rgba(0,0,0,0);
+        }
+        .btn-pill:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            filter: grayscale(0.5);
+        }
+
+        .btn-primary { background: var(--accent-pink); color: white; }
+        .btn-secondary { background: var(--accent-blue); color: white; }
+        .btn-success { background: var(--accent-green); color: white; }
+        .btn-warning { background: var(--accent-yellow); color: #7A6000; }
+        .btn-danger { background: #FF8A80; color: white; }
+
+        .date-active {
+            background-color: var(--accent-green);
+            color: white;
+            transform: translateY(-4px) rotate(-2deg);
+            box-shadow: 3px 3px 0 #88A858;
+        }
+        .date-active-snow {
+            background-color: var(--accent-blue);
+            color: white;
+            transform: translateY(-4px) rotate(2deg);
+            box-shadow: 3px 3px 0 #6BAED6;
+        }
+        .date-inactive {
+            background-color: white;
+            color: #C0B0A8;
+            border: 2px solid #F0E6DD;
+        }
+
+        .pb-safe { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+
+        .toast-enter { animation: toastSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        @keyframes toastSlideUp { from { transform: translate(-50%, 120%); } to { transform: translate(-50%, 0); } }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+
+        // ==========================================
+        // ⚠️⚠️⚠️  Firebase 設定區  ⚠️⚠️⚠️
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbYkxvrEFMfltDnn_8fxLpPLDLZU3HscQ",
+            authDomain: "travel-a01b4.firebaseapp.com",
+            projectId: "travel-a01b4",
+            storageBucket: "travel-a01b4.firebasestorage.app",
+            messagingSenderId: "879602910910",
+            appId: "1:879602910910:web:5036f88cc2581c4761c0ef"
+        };
+
+        if (firebase.apps.length === 0) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+        // ⚠️ 已移除寫死的 TRIP_DOC_ID，改由 App 元件動態管理
+
+        // --- Icons ---
+        const Icon = ({ name, size = 20, className, color = "currentColor", strokeWidth = 3 }) => {
+            const iconData = lucide.icons[name];
+            if (!iconData) return null;
+            return (
+                <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    {iconData.map((child, index) => React.createElement(child[0], { ...child[1], key: index }))}
+                </svg>
+            );
+        };
+
+        // --- Default Data (Initial State for a fresh trip) ---
+        const defaultSettings = {
+            title: '我的快樂旅程',
+            startDate: '2026-01-18', // Default start date
+            duration: 5, // Default days
+            bgIcon: '✈️'
+        };
+        const defaultItinerary = [];
+        const defaultExpenses = [];
+        const defaultUsers = ['我', '旅伴A'];
+        const defaultGuides = [];
+
+        // --- Firebase Hook (Modified for Dynamic Trip ID) ---
+        const useFirebaseSync = (collectionName, fieldName, defaultValue, tripId) => {
+            const [data, setData] = useState(() => {
+                try {
+                    // 使用 tripId 作為 key 的一部分，避免不同行程讀到舊的 cache
+                    const local = window.localStorage.getItem(`${tripId}_${fieldName}`);
+                    return local ? JSON.parse(local) : defaultValue;
+                } catch { return defaultValue; }
+            });
+            const [isSyncing, setIsSyncing] = useState(false);
+
+            useEffect(() => {
+                if (!db || !tripId) return;
+                
+                // 訂閱特定 Trip ID 的文件
+                const unsubscribe = db.collection(collectionName).doc(tripId)
+                    .onSnapshot((doc) => {
+                        if (doc.exists) {
+                            const remoteData = doc.data()[fieldName];
+                            if (remoteData !== undefined) {
+                                setData(remoteData);
+                                window.localStorage.setItem(`${tripId}_${fieldName}`, JSON.stringify(remoteData));
+                            }
+                        } else {
+                            // 如果文件不存在（新行程），初始化它
+                            db.collection(collectionName).doc(tripId).set({ [fieldName]: defaultValue }, { merge: true });
+                        }
+                    });
+                return () => unsubscribe();
+            }, [collectionName, fieldName, tripId]); // 依賴 tripId，當 ID 變更時會重新訂閱
+
+            const updateData = async (newData) => {
+                setData(newData);
+                window.localStorage.setItem(`${tripId}_${fieldName}`, JSON.stringify(newData));
+                if (db && tripId) {
+                    setIsSyncing(true);
+                    try {
+                        await db.collection(collectionName).doc(tripId).update({ [fieldName]: newData });
+                    } catch (e) {
+                        console.error("Write Error:", e);
+                        // 如果是因為文件不存在導致 update 失敗，嘗試 set
+                        if (e.code === 'not-found') {
+                             await db.collection(collectionName).doc(tripId).set({ [fieldName]: newData }, { merge: true });
+                        }
+                    } finally {
+                        setIsSyncing(false);
+                    }
+                }
+            };
+            return [data, updateData, isSyncing];
+        };
+
+        // --- Shared Components ---
+        const Toast = ({ message, visible }) => {
+            if (!visible) return null;
+            return (
+                <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-[var(--text-main)] text-white px-5 py-3 rounded-full shadow-xl z-[150] flex items-center gap-3 text-sm font-bold toast-enter border-2 border-white whitespace-nowrap">
+                    <div className="bg-[var(--accent-green)] rounded-full p-1"><Icon name="Check" size={14} className="text-white" /></div>
+                    {message}
+                </div>
+            );
+        };
+
+        const BackgroundStickers = () => (
+            <div className="bg-sticker-layer">
+                <div className="sticker text-6xl" style={{top: '5%', left: '5%', transform: 'rotate(-10deg)'}}>☁️</div>
+                <div className="sticker text-6xl" style={{top: '15%', right: '10%', transform: 'rotate(15deg)'}}>✨</div>
+                <div className="sticker text-8xl" style={{bottom: '25%', right: '-5%', transform: 'rotate(10deg)'}}>🗺️</div>
+                <div className="sticker text-6xl" style={{top: '70%', right: '60%', transform: 'rotate(5deg)'}}>🎒</div>
+                <div className="sticker text-4xl" style={{top: '2%', right: '40%', opacity: 0.1}}>✈️</div>
+                <div className="sticker text-9xl" style={{top: '40%', left: '30%', opacity: 0.05, filter: 'grayscale(100%)'}}>🌏</div>
+            </div>
+        );
+
+        const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, confirmText = "確定", confirmColor = "btn-danger", isLoading = false }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[200] flex items-center justify-center p-4 animate-modal" onClick={!isLoading ? onCancel : undefined}>
+                    <div className="bg-white w-full max-w-xs rounded-3xl p-6 shadow-2xl relative border-4 border-[#F0E6DD]" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-xl font-black mb-2 text-[var(--text-main)]">{title}</h3>
+                        {message && <p className="text-sm text-gray-500 mb-6 leading-relaxed">{message}</p>}
+                        <div className="flex gap-3">
+                            <button onClick={onCancel} disabled={isLoading} className="flex-1 py-3 text-gray-500 font-bold bg-gray-100 rounded-2xl btn-pill">取消</button>
+                            <button onClick={onConfirm} disabled={isLoading} className={`flex-1 py-3 ${confirmColor} btn-pill font-bold shadow-lg`}>
+                                {isLoading ? <div className="spinner"></div> : confirmText}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Helper Function: Generate Dates ---
+        const generateDaysData = (startDateStr, duration) => {
+            const days = [];
+            const start = new Date(startDateStr);
+            const weekDays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+            
+            for (let i = 0; i < duration; i++) {
+                const current = new Date(start);
+                current.setDate(start.getDate() + i);
+                const month = current.getMonth() + 1;
+                const date = current.getDate();
+                const week = weekDays[current.getDay()];
+                days.push({
+                    day: i + 1,
+                    date: `${month}/${date}`,
+                    week: week,
+                    fullDate: current 
+                });
+            }
+            return days;
+        };
+
+        // --- Views ---
+
+        const SettingsModal = ({ isOpen, onClose, settings, updateSettings, tripId, setTripId, onReset }) => {
+            if (!isOpen) return null;
+            const [localSettings, setLocalSettings] = useState(settings);
+            const [localTripId, setLocalTripId] = useState(tripId);
+
+            const handleSave = () => {
+                if (!localTripId.trim()) return alert("請輸入有效的資料庫 ID");
+                setTripId(localTripId.trim()); // Update App's tripId, triggering re-sync
+                updateSettings(localSettings); // This will update settings inside the NEW tripId document
+                onClose();
+            };
+
+            return (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150] flex items-center justify-center p-4 animate-modal" onClick={onClose}>
+                    <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border-4 border-[#F0E6DD]" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-xl font-black mb-4 text-[var(--text-main)] flex items-center gap-2">
+                            <Icon name="Settings" size={20} /> 旅程設定
+                        </h3>
+                        
+                        <div className="space-y-4">
+                            {/* Trip ID Section */}
+                            <div className="bg-blue-50 p-3 rounded-2xl border border-blue-100">
+                                <label className="text-xs font-bold text-blue-500 ml-1 mb-1 block flex items-center gap-1">
+                                    <Icon name="Database" size={12}/> 資料庫識別碼 (Trip ID)
+                                </label>
+                                <input 
+                                    type="text" 
+                                    value={localTripId} 
+                                    onChange={e => setLocalTripId(e.target.value)} 
+                                    className="input-cute mb-1 text-sm font-mono border-blue-200 focus:border-blue-400" 
+                                    placeholder="例如: trip_osaka_2026"
+                                />
+                                <p className="text-[10px] text-blue-400 leading-tight">
+                                    ⚠️ 修改此 ID 將切換到不同的行程資料庫。請與旅伴使用相同的 ID。
+                                </p>
+                            </div>
+
+                            <hr className="border-gray-100"/>
+
+                            <div>
+                                <label className="text-xs font-bold text-gray-400 ml-1">旅程名稱</label>
+                                <input type="text" value={localSettings.title} onChange={e => setLocalSettings({...localSettings, title: e.target.value})} className="input-cute" />
+                            </div>
+                            <div className="flex gap-3">
+                                <div className="flex-1">
+                                    <label className="text-xs font-bold text-gray-400 ml-1">出發日期</label>
+                                    <input type="date" value={localSettings.startDate} onChange={e => setLocalSettings({...localSettings, startDate: e.target.value})} className="input-cute" />
+                                </div>
+                                <div className="w-24">
+                                    <label className="text-xs font-bold text-gray-400 ml-1">天數</label>
+                                    <input type="number" min="1" max="30" value={localSettings.duration} onChange={e => setLocalSettings({...localSettings, duration: parseInt(e.target.value)})} className="input-cute" />
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="mt-8 space-y-3">
+                            <button onClick={handleSave} className="w-full py-3 btn-success btn-pill font-bold shadow-lg">儲存並切換</button>
+                            <button onClick={onReset} className="w-full py-3 text-red-400 font-bold bg-red-50 rounded-2xl btn-pill border border-red-100">清空此 ID 的資料 (Reset)</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const ItineraryView = ({ items, setItems, settings, openSettings, showToast }) => {
+            const [selectedDay, setSelectedDay] = useState(1);
+            const [isAdding, setIsAdding] = useState(false);
+            const [editingItem, setEditingItem] = useState(null);
+            const [newItem, setNewItem] = useState({ time: '', title: '', location: '', note: '' });
+            const [deleteTarget, setDeleteTarget] = useState(null);
+            const [isSaving, setIsSaving] = useState(false);
+            
+            const daysData = useMemo(() => generateDaysData(settings.startDate, settings.duration), [settings]);
+            const filteredItems = items.filter(i => i.day === selectedDay).sort((a, b) => a.time.localeCompare(b.time));
+            const isSpecialDay = daysData[selectedDay-1]?.week === '週六' || daysData[selectedDay-1]?.week === '週日';
+
+            const confirmDelete = async () => {
+                if (deleteTarget) {
+                    setIsSaving(true);
+                    await setItems(items.filter(i => i.id !== deleteTarget));
+                    setIsSaving(false);
+                    showToast("已刪除");
+                    setDeleteTarget(null);
+                }
+            };
+
+            const handleAdd = async () => {
+                if (!newItem.title) return;
+                setIsSaving(true);
+                await setItems([...items, { ...newItem, id: Date.now(), day: selectedDay }]);
+                setIsSaving(false);
+                setIsAdding(false); 
+                setNewItem({ time: '', title: '', location: '', note: '' }); 
+                showToast("已新增行程");
+            };
+
+            const handleUpdate = async () => {
+                if (!editingItem.title) return;
+                setIsSaving(true);
+                await setItems(items.map(i => i.id === editingItem.id ? editingItem : i));
+                setIsSaving(false);
+                setEditingItem(null); 
+                showToast("行程已更新");
+            };
+
+            useEffect(() => {
+                if (selectedDay > settings.duration) setSelectedDay(1);
+            }, [settings.duration]);
+
+            return (
+                <div className="flex flex-col h-full w-full page-enter">
+                    <BackgroundStickers />
+                    <div className="scroll-container p-5">
+                        <header className="mb-6 mt-2 flex justify-between items-start relative z-20">
+                            <div>
+                                <div className="text-xs font-bold text-[var(--accent-blue)] uppercase tracking-widest mb-1">Travel Plan</div>
+                                <h1 className="text-2xl font-black text-[var(--text-main)] tracking-tight leading-tight max-w-[200px]">
+                                    {settings.title}
+                                </h1>
+                                <div className="text-xs text-gray-400 font-bold mt-1">{settings.startDate} 出發 • {settings.duration} 天</div>
+                            </div>
+                            <div className="flex gap-2">
+                                <button onClick={openSettings} className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-gray-400 active:scale-95">
+                                    <Icon name="Settings" size={20} />
+                                </button>
+                                <button onClick={() => setIsAdding(true)} className="btn-pill btn-primary px-4 py-2 flex items-center gap-1 shadow-lg active:scale-95">
+                                    <Icon name="Plus" size={18} strokeWidth={3} />
+                                    <span>新增</span>
+                                </button>
+                            </div>
+                        </header>
+
+                        <div className="flex gap-3 mb-8 overflow-x-auto no-scrollbar pb-6 pt-2 snap-x snap-mandatory relative z-20 px-1">
+                            {daysData.map(d => (
+                                <button key={d.day} onClick={() => setSelectedDay(d.day)} className={`snap-center flex flex-col items-center justify-center min-w-[4.5rem] h-20 rounded-2xl transition-all duration-300 transform border-2 ${selectedDay === d.day ? (isSpecialDay ? 'date-active-snow border-transparent' : 'date-active border-transparent') : 'date-inactive'}`}>
+                                    <span className={`text-[10px] font-bold mb-1 ${selectedDay === d.day ? 'opacity-90' : 'opacity-50'}`}>{d.week}</span>
+                                    <span className="text-xl font-black tracking-tight">{d.date}</span>
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="relative z-10 pb-20 space-y-5">
+                            {filteredItems.map((item, idx) => (
+                                <div key={item.id} className="card-cute p-5 stagger-item cursor-pointer relative group overflow-hidden" style={{ animationDelay: `${idx * 0.08}s` }} onClick={() => setEditingItem(item)}>
+                                    <div className={`absolute top-0 left-0 w-2 h-full ${isSpecialDay ? 'bg-[var(--accent-blue)]' : 'bg-[var(--accent-green)]'}`}></div>
+                                    <div className="flex justify-between items-start mb-2 pl-2">
+                                        <span className={`font-black font-mono text-xl px-2 py-0.5 rounded-md ${isSpecialDay ? 'text-[var(--accent-blue)] bg-blue-50' : 'text-[var(--accent-green)] bg-[#F0F7E6]'}`}>{item.time}</span>
+                                        <button onClick={(e) => { e.stopPropagation(); setDeleteTarget(item.id); }} className="text-gray-300 hover:text-[var(--accent-pink)] p-1"><Icon name="Trash2" size={18} /></button>
+                                    </div>
+                                    <h3 className="font-bold text-lg mb-2 pl-2 text-[var(--text-main)]">{item.title}</h3>
+                                    <div className="pl-2 space-y-2">
+                                        {item.location && (
+                                            <div className="flex justify-between items-center bg-[#F7FAFC] p-2 rounded-xl border border-gray-100">
+                                                <div className="text-sm font-bold text-gray-500 flex items-center gap-1.5 truncate"><Icon name="MapPin" size={14} className="text-[var(--accent-pink)]" />{item.location}</div>
+                                                <button className="btn-pill btn-secondary text-[10px] px-3 py-1 flex items-center gap-1" onClick={(e) => { e.stopPropagation(); window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}`, '_blank')}}><Icon name="Navigation2" size={10} />MAP</button>
+                                            </div>
+                                        )}
+                                        {item.note && <div className="sticky-note">{item.note.split('\n').map((line, i) => <div key={i}>{line}</div>)}</div>}
+                                    </div>
+                                </div>
+                            ))}
+                            {filteredItems.length === 0 && <div className="text-center py-20 opacity-40"><div className="text-5xl mb-3 grayscale">💤</div><div className="font-bold text-sm">這天還沒有行程喔</div></div>}
+                        </div>
+                    </div>
+
+                    {(isAdding || editingItem) && (
+                        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-modal" onClick={() => { if(!isSaving) { setIsAdding(false); setEditingItem(null); }}}>
+                            <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl overflow-y-auto max-h-[80vh] relative border-4 border-[#F0E6DD]" onClick={e => e.stopPropagation()}>
+                                <h3 className="text-xl font-black mb-6 text-[var(--text-main)] flex items-center gap-2">
+                                    <span className="bg-[var(--accent-yellow)] w-8 h-8 rounded-full flex items-center justify-center text-white"><Icon name="PenLine" size={18}/></span>
+                                    {isAdding ? '新增行程' : '編輯行程'}
+                                </h3>
+                                <div className="space-y-4">
+                                    <div><label className="text-xs font-bold text-gray-400 ml-1">時間</label><input type="time" value={isAdding ? newItem.time : editingItem.time} onChange={e => isAdding ? setNewItem({...newItem, time: e.target.value}) : setEditingItem({...editingItem, time: e.target.value})} className="input-cute" /></div>
+                                    <div><label className="text-xs font-bold text-gray-400 ml-1">標題</label><input type="text" placeholder="例：吃拉麵" value={isAdding ? newItem.title : editingItem.title} onChange={e => isAdding ? setNewItem({...newItem, title: e.target.value}) : setEditingItem({...editingItem, title: e.target.value})} className="input-cute" /></div>
+                                    <div><label className="text-xs font-bold text-gray-400 ml-1">地點</label><input type="text" placeholder="Google Maps 地點" value={isAdding ? newItem.location : editingItem.location} onChange={e => isAdding ? setNewItem({...newItem, location: e.target.value}) : setEditingItem({...editingItem, location: e.target.value})} className="input-cute" /></div>
+                                    <div><label className="text-xs font-bold text-gray-400 ml-1">筆記</label><textarea placeholder="備註事項..." value={isAdding ? newItem.note : editingItem.note} onChange={e => isAdding ? setNewItem({...newItem, note: e.target.value}) : setEditingItem({...editingItem, note: e.target.value})} className="input-cute h-24 resize-none"></textarea></div>
+                                </div>
+                                <div className="flex gap-3 mt-8">
+                                    <button onClick={() => { setIsAdding(false); setEditingItem(null); }} disabled={isSaving} className="flex-1 py-3 text-gray-500 font-bold bg-gray-100 rounded-2xl btn-pill">取消</button>
+                                    <button onClick={isAdding ? handleAdd : handleUpdate} disabled={isSaving} className="flex-1 py-3 btn-success btn-pill font-bold shadow-lg">
+                                        {isSaving ? <div className="spinner"></div> : (isAdding ? '加入' : '更新')}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <ConfirmModal 
+                        isOpen={!!deleteTarget} 
+                        title="刪除行程？" 
+                        onConfirm={confirmDelete} 
+                        onCancel={() => setDeleteTarget(null)} 
+                        isLoading={isSaving}
+                    />
+                </div>
+            );
+        };
+
+        // ... ExpenseView (Universal) ...
+        const ExpenseView = ({ expenses, setExpenses, users, setUsers, showToast }) => {
+            const [newExp, setNewExp] = useState({ title: '', amount: '', payer: '' });
+            const [involvedUsers, setInvolvedUsers] = useState([]); 
+            
+            const [isAddingUser, setIsAddingUser] = useState(false);
+            const [newUserName, setNewUserName] = useState('');
+            const [deleteTarget, setDeleteTarget] = useState(null); 
+            const [userToDelete, setUserToDelete] = useState(null); 
+            const [isSaving, setIsSaving] = useState(false);
+
+            useEffect(() => { 
+                if (users.length > 0) {
+                    if (!newExp.payer) setNewExp(prev => ({ ...prev, payer: users[0] }));
+                    if (involvedUsers.length === 0) setInvolvedUsers(users);
+                } 
+            }, [users]);
+
+            const debtSummary = useMemo(() => {
+                let balances = {}; users.forEach(u => balances[u] = 0);
+                let totalSpent = 0;
+                
+                expenses.forEach(e => {
+                    const payer = users.includes(e.payer) ? e.payer : users[0];
+                    if (!payer) return;
+                    
+                    const cost = parseFloat(e.amount); 
+                    totalSpent += cost; 
+                    balances[payer] += cost; 
+                    
+                    const splitTargets = e.involved && e.involved.length > 0 ? e.involved : users; 
+                    const splitAmount = cost / splitTargets.length;
+                    
+                    splitTargets.forEach(u => {
+                        if (balances[u] !== undefined) balances[u] -= splitAmount; 
+                    });
+                });
+                
+                const debts = [];
+                const debtors = users.filter(u => balances[u] < -1).sort((a, b) => balances[a] - balances[b]);
+                const creditors = users.filter(u => balances[u] > 1).sort((a, b) => balances[b] - balances[a]);
+                
+                let i = 0, j = 0;
+                while (i < debtors.length && j < creditors.length) {
+                    let debtor = debtors[i], creditor = creditors[j];
+                    let amount = Math.min(Math.abs(balances[debtor]), balances[creditor]);
+                    if (amount > 0) debts.push({ from: debtor, to: creditor, amount: Math.round(amount) });
+                    balances[debtor] += amount; balances[creditor] -= amount;
+                    if (Math.abs(balances[debtor]) < 1) i++; if (balances[creditor] < 1) j++;
+                }
+                return { debts, totalSpent };
+            }, [expenses, users]);
+
+            const handleAddUser = async () => { 
+                if (newUserName.trim() && !users.includes(newUserName.trim())) { 
+                    setIsSaving(true);
+                    await setUsers([...users, newUserName.trim()]); 
+                    setNewUserName(''); 
+                    setIsAddingUser(false); 
+                    setIsSaving(false);
+                    showToast("成員已新增"); 
+                } 
+            };
+            
+            const confirmDeleteUser = async () => {
+                if (userToDelete) {
+                    setIsSaving(true);
+                    await setUsers(users.filter(user => user !== userToDelete));
+                    setIsSaving(false);
+                    showToast("成員已移除");
+                    setUserToDelete(null);
+                }
+            };
+
+            const toggleInvolved = (user) => {
+                if (involvedUsers.includes(user)) {
+                    if (involvedUsers.length > 1) {
+                        setInvolvedUsers(involvedUsers.filter(u => u !== user));
+                    }
+                } else {
+                    setInvolvedUsers([...involvedUsers, user]);
+                }
+            };
+
+            const handleAddExpense = async () => { 
+                if (!newExp.title || !newExp.amount) return; 
+                setIsSaving(true);
+                await setExpenses([...expenses, { 
+                    ...newExp, 
+                    id: Date.now(), 
+                    amount: parseFloat(newExp.amount),
+                    involved: involvedUsers
+                }]); 
+                setNewExp({ title: '', amount: '', payer: users[0] || '' }); 
+                setInvolvedUsers(users);
+                setIsSaving(false);
+                showToast("記帳成功"); 
+            };
+            
+            const confirmDeleteExpense = async () => {
+                if (deleteTarget) {
+                    setIsSaving(true);
+                    await setExpenses(expenses.filter(e => e.id !== deleteTarget));
+                    setIsSaving(false);
+                    showToast("已刪除");
+                    setDeleteTarget(null);
+                }
+            };
+
+            return (
+                <div className="p-5 h-full relative z-10 animate-fade-in scroll-container page-enter">
+                    <BackgroundStickers />
+                    <h1 className="text-3xl font-black text-[var(--text-main)] mb-6 flex items-center gap-2">分帳小幫手 <span className="text-2xl">💰</span></h1>
+                    
+                    {/* Users List */}
+                    <div className="mb-6 flex flex-wrap gap-2 items-center relative z-20">
+                        {users.map(u => (
+                            <div key={u} className="bg-white px-3 py-1.5 rounded-full text-sm font-bold text-gray-600 border border-gray-200 shadow-sm flex items-center gap-1">
+                                <div className="w-5 h-5 rounded-full bg-[var(--accent-blue)] text-white flex items-center justify-center text-[10px]">{u[0]}</div>
+                                {u}
+                                <button onClick={() => { 
+                                    if(users.length <= 1) return alert("至少保留一位成員");
+                                    setUserToDelete(u); 
+                                }} className="ml-1 text-gray-300 hover:text-red-400"><Icon name="X" size={12}/></button>
+                            </div>
+                        ))}
+                        {isAddingUser ? (
+                            <div className="flex items-center gap-2 animate-fade-in">
+                                <input 
+                                    type="text" 
+                                    value={newUserName} 
+                                    onChange={e => setNewUserName(e.target.value)} 
+                                    className="input-cute py-1 px-3 mb-0 w-24 text-sm" 
+                                    placeholder="名字" 
+                                    autoFocus 
+                                    onKeyDown={e => e.key === 'Enter' && handleAddUser()}
+                                />
+                                <button onClick={handleAddUser} disabled={isSaving} className="btn-pill btn-warning px-3 py-1 text-xs shadow-md">{isSaving ? '...' : '加入'}</button>
+                                <button onClick={() => setIsAddingUser(false)} className="bg-gray-100 rounded-full w-6 h-6 flex items-center justify-center"><Icon name="X" size={12}/></button>
+                            </div>
+                        ) : (
+                            <button onClick={() => setIsAddingUser(true)} className="w-8 h-8 rounded-full bg-white border-2 border-dashed border-gray-300 text-gray-400 flex items-center justify-center hover:border-[var(--accent-yellow)] hover:text-[var(--accent-yellow)]"><Icon name="Plus" size={16}/></button>
+                        )}
+                    </div>
+
+                    {/* Summary */}
+                    <div className="card-cute p-6 mb-6 bg-gradient-to-br from-white to-[#FFFCF5]">
+                        <div className="flex justify-between items-end mb-4">
+                            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Total Spent</h2>
+                            <span className="text-3xl font-black font-mono text-[var(--accent-yellow)]">¥{debtSummary.totalSpent.toLocaleString()}</span>
+                        </div>
+                        <div className="border-t-2 border-dashed border-gray-100 my-4"></div>
+                        <div className="space-y-3">
+                            {debtSummary.debts.length === 0 ? <div className="text-center text-gray-400 text-sm font-bold">目前沒有欠款 ✨</div> : debtSummary.debts.map((d, idx) => (
+                                <div key={idx} className="flex justify-between items-center bg-[#F7FAFC] p-3 rounded-xl">
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-bold text-gray-600">{d.from}</span>
+                                        <Icon name="ArrowRight" size={14} className="text-gray-300"/>
+                                        <span className="font-bold text-gray-600">{d.to}</span>
+                                    </div>
+                                    <span className="font-mono font-bold text-[var(--text-main)]">¥{d.amount.toLocaleString()}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Add Expense Form (Improved) */}
+                    <div className="card-cute p-5 mb-6 relative z-10 border-l-4 border-l-[var(--accent-pink)]">
+                        <h3 className="text-sm font-black text-gray-400 mb-3 uppercase tracking-wider">New Expense</h3>
+                        <div className="space-y-3">
+                            <input type="text" placeholder="項目 (例: 居酒屋)" value={newExp.title} onChange={e => setNewExp({...newExp, title: e.target.value})} className="input-cute" />
+                            <div className="flex gap-2">
+                                <input type="number" placeholder="¥ 金額" value={newExp.amount} onChange={e => setNewExp({...newExp, amount: e.target.value})} className="input-cute flex-1" />
+                                <div className="relative w-1/3">
+                                    <select value={newExp.payer} onChange={e => setNewExp({...newExp, payer: e.target.value})} className="input-cute h-full appearance-none pr-8">
+                                        {users.map(u => <option key={u} value={u}>{u} 先付</option>)}
+                                    </select>
+                                    <Icon name="ChevronDown" size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"/>
+                                </div>
+                            </div>
+                            
+                            {/* Split Selector */}
+                            <div className="bg-[#F7FAFC] p-3 rounded-xl">
+                                <div className="text-xs font-bold text-gray-400 mb-2">誰要分攤？(點擊切換)</div>
+                                <div className="flex flex-wrap gap-2">
+                                    {users.map(u => {
+                                        const isSelected = involvedUsers.includes(u);
+                                        return (
+                                            <button 
+                                                key={u} 
+                                                onClick={() => toggleInvolved(u)}
+                                                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border-2 ${isSelected ? 'bg-[var(--accent-blue)] text-white border-[var(--accent-blue)]' : 'bg-white text-gray-400 border-gray-200'}`}
+                                            >
+                                                {u}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            <button onClick={handleAddExpense} disabled={isSaving || !newExp.title || !newExp.amount} className="w-full btn-pill btn-primary py-3 shadow-lg flex justify-center items-center gap-2 mt-2">
+                                {isSaving ? <div className="spinner"></div> : <><Icon name="PlusCircle" size={18}/> 記上一筆</>}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Expense List */}
+                    <div className="space-y-3 pb-24 relative z-10">
+                        {expenses.slice().reverse().map((exp, idx) => (
+                            <div key={exp.id} className="bg-white/90 p-4 rounded-2xl shadow-sm flex justify-between items-center stagger-item border border-gray-50">
+                                <div>
+                                    <div className="font-bold text-[var(--text-main)]">{exp.title}</div>
+                                    <div className="text-xs text-gray-400 font-bold flex items-center gap-1 mt-1">
+                                        <Icon name="User" size={10} /> 
+                                        {exp.payer} 付款 
+                                        <Icon name="ArrowRight" size={10} className="ml-1"/> 
+                                        {exp.involved && exp.involved.length < users.length ? `${exp.involved.length} 人分` : '全員'}
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="font-mono font-bold text-lg text-[var(--accent-yellow)]">¥{exp.amount.toLocaleString()}</div>
+                                    <button onClick={() => setDeleteTarget(exp.id)} className="text-gray-200 hover:text-[var(--accent-pink)]"><Icon name="Trash2" size={16}/></button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <ConfirmModal 
+                        isOpen={!!deleteTarget} 
+                        title="刪除款項？" 
+                        onConfirm={confirmDeleteExpense} 
+                        onCancel={() => setDeleteTarget(null)} 
+                        isLoading={isSaving}
+                    />
+                    <ConfirmModal 
+                        isOpen={!!userToDelete} 
+                        title={`移除 ${userToDelete}？`}
+                        message="注意：這不會自動清除他已付的款項紀錄，請確認帳務已結清。"
+                        onConfirm={confirmDeleteUser} 
+                        onCancel={() => setUserToDelete(null)} 
+                        isLoading={isSaving}
+                    />
+                </div>
+            );
+        };
+
+        // ... GuideView (Same as before) ...
+        const GuideView = ({ guides, setGuides, showToast }) => {
+            const [isAdding, setIsAdding] = useState(false);
+            const [newGuide, setNewGuide] = useState({ title: '', content: '', type: 'transport' });
+            const [deleteTarget, setDeleteTarget] = useState(null);
+            const [isSaving, setIsSaving] = useState(false);
+
+            const typeMap = { 
+                transport: { icon: 'TrainFront', color: 'text-blue-500', bg: 'bg-blue-100', label: '交通' }, 
+                ticket: { icon: 'Ticket', color: 'text-green-500', bg: 'bg-green-100', label: '票券' }, 
+                spot: { icon: 'MapPin', color: 'text-red-500', bg: 'bg-red-100', label: '景點' }, 
+                shopping: { icon: 'ShoppingBag', color: 'text-orange-500', bg: 'bg-orange-100', label: '購物' } 
+            };
+
+            const handleAdd = async () => { 
+                if (!newGuide.title) return; 
+                setIsSaving(true);
+                await setGuides([...guides, { ...newGuide, id: Date.now() }]); 
+                setIsSaving(false);
+                setIsAdding(false); 
+                setNewGuide({ title: '', content: '', type: 'transport' }); 
+                showToast("攻略已新增"); 
+            };
+            
+            const confirmDelete = async () => {
+                if (deleteTarget) {
+                    setIsSaving(true);
+                    await setGuides(guides.filter(g => g.id !== deleteTarget));
+                    setIsSaving(false);
+                    showToast("已刪除");
+                    setDeleteTarget(null);
+                }
+            };
+
+            return (
+                <div className="p-5 h-full relative z-10 animate-fade-in scroll-container page-enter">
+                    <BackgroundStickers />
+                    <header className="mb-6 flex justify-between items-center relative z-20">
+                         <h1 className="text-3xl font-black text-[var(--text-main)] flex items-center gap-2">旅行攻略 <span className="text-2xl">📝</span></h1>
+                         <button onClick={() => setIsAdding(true)} className="w-10 h-10 rounded-full bg-[var(--accent-blue)] text-white shadow-lg flex items-center justify-center active:scale-90 transition-transform"><Icon name="Plus" size={20} strokeWidth={3}/></button>
+                    </header>
+                    <div className="space-y-4 pb-20 relative z-10">
+                        {guides.map((g, i) => {
+                             const style = typeMap[g.type] || typeMap['transport'];
+                             return (
+                                <div key={g.id} className="card-cute p-5 stagger-item relative group" style={{animationDelay: `${i*0.05}s`}}>
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <div className={`w-10 h-10 rounded-full ${style.bg} ${style.color} flex items-center justify-center shrink-0`}><Icon name={style.icon} size={20} /></div>
+                                        <h3 className="text-lg font-bold text-[var(--text-main)] leading-tight">{g.title}</h3>
+                                        <button onClick={() => setDeleteTarget(g.id)} className="ml-auto text-gray-200 hover:text-red-400"><Icon name="Trash2" size={16} /></button>
+                                    </div>
+                                    <div className="pl-[52px]">
+                                        <ul className="space-y-2">
+                                            {g.content.split('\n').map((line, idx) => (
+                                                <li key={idx} className="text-sm text-gray-600 leading-relaxed font-medium relative pl-3 before:content-['•'] before:absolute before:left-0 before:text-gray-300">{line}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+                             );
+                        })}
+                    </div>
+                    {isAdding && (
+                        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-modal" onClick={() => { if(!isSaving) setIsAdding(false); }}>
+                            <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl relative border-4 border-[#F0E6DD]" onClick={e => e.stopPropagation()}>
+                                <h3 className="text-xl font-black mb-4 text-[var(--text-main)]">新增筆記</h3>
+                                <div className="space-y-4">
+                                    <input type="text" placeholder="標題" value={newGuide.title} onChange={e => setNewGuide({...newGuide, title: e.target.value})} className="input-cute" />
+                                    <div className="flex gap-2 mb-2 overflow-x-auto no-scrollbar pb-1">
+                                        {Object.entries(typeMap).map(([key, val]) => (<button key={key} onClick={() => setNewGuide({...newGuide, type: key})} className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border-2 transition-all flex items-center gap-1 ${newGuide.type === key ? `border-${val.color.split('-')[1]}-400 bg-${val.color.split('-')[1]}-50 text-${val.color.split('-')[1]}-600` : 'border-gray-100 bg-gray-50 text-gray-400'}`}><Icon name={val.icon} size={14} /> {val.label}</button>))}
+                                    </div>
+                                    <textarea placeholder="內容" value={newGuide.content} onChange={e => setNewGuide({...newGuide, content: e.target.value})} className="input-cute h-32 resize-none"></textarea>
+                                </div>
+                                <div className="flex gap-3 mt-6">
+                                    <button onClick={() => setIsAdding(false)} disabled={isSaving} className="flex-1 py-3 text-gray-500 font-bold bg-gray-100 rounded-2xl btn-pill">取消</button>
+                                    <button onClick={handleAdd} disabled={isSaving} className="flex-1 py-3 btn-success btn-pill font-bold shadow-lg">
+                                        {isSaving ? <div className="spinner"></div> : '儲存'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    
+                    <ConfirmModal 
+                        isOpen={!!deleteTarget} 
+                        title="刪除攻略？" 
+                        onConfirm={confirmDelete} 
+                        onCancel={() => setDeleteTarget(null)} 
+                        isLoading={isSaving}
+                    />
+                </div>
+            );
+        }
+
+        const TabBar = ({ activeTab, setActiveTab }) => {
+            const tabs = [
+                { id: 'itinerary', label: '行程', icon: 'Calendar', color: 'text-[var(--accent-green)]' },
+                { id: 'guide', label: '攻略', icon: 'BookOpen', color: 'text-[var(--accent-pink)]' },
+                { id: 'expenses', label: '分帳', icon: 'Wallet', color: 'text-[var(--accent-yellow)]' },
+            ];
+            return (
+                <div className="tab-bar-glass pb-safe-bottom pt-3 px-6 flex justify-around z-50">
+                    {tabs.map(tab => (
+                        <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex flex-col items-center w-16 transition-all duration-300 active:scale-90 ${activeTab === tab.id ? '-translate-y-2' : 'opacity-40 hover:opacity-60'}`}>
+                            <div className={`p-2.5 rounded-2xl transition-all duration-300 ${activeTab === tab.id ? 'bg-white shadow-md rotate-3' : 'bg-transparent'}`}>
+                                <Icon name={tab.icon} size={24} className={activeTab === tab.id ? tab.color : "text-gray-500"} strokeWidth={activeTab === tab.id ? 3 : 2.5} />
+                            </div>
+                            <span className={`text-[10px] mt-1 font-bold tracking-wide ${activeTab === tab.id ? 'text-[var(--text-main)]' : 'text-gray-400'}`}>{tab.label}</span>
+                        </button>
+                    ))}
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [activeTab, setActiveTab] = useState('itinerary');
+            
+            // 🆕 Initialize Trip ID from LocalStorage or Default
+            const [tripId, setTripId] = useState(() => {
+                return window.localStorage.getItem('current_trip_id') || 'trip_2026_demo';
+            });
+
+            // Save Trip ID changes
+            useEffect(() => {
+                window.localStorage.setItem('current_trip_id', tripId);
+            }, [tripId]);
+
+            // Settings and Data Hooks (Dynamic ID)
+            const [settings, setSettings, syncingSettings] = useFirebaseSync('trips', 'settings', defaultSettings, tripId);
+            const [itineraryItems, setItineraryItems, syncingItinerary] = useFirebaseSync('trips', 'itinerary', defaultItinerary, tripId);
+            const [expenses, setExpenses, syncingExpenses] = useFirebaseSync('trips', 'expenses', defaultExpenses, tripId);
+            const [users, setUsers, syncingUsers] = useFirebaseSync('trips', 'users', defaultUsers, tripId);
+            const [guides, setGuides, syncingGuides] = useFirebaseSync('trips', 'guides', defaultGuides, tripId);
+            
+            const [showSettings, setShowSettings] = useState(false);
+            const [toast, setToast] = useState({ msg: '', visible: false });
+
+            const showToast = (msg) => { setToast({ msg, visible: true }); setTimeout(() => setToast({ msg: '', visible: false }), 2000); };
+
+            const handleReset = async () => {
+                if(confirm(`確定重置 ID: ${tripId} 的所有資料？此操作無法復原。`)) {
+                    await setItineraryItems([]);
+                    await setExpenses([]);
+                    await setUsers(['我', '旅伴A']);
+                    await setGuides([]);
+                    // Reset Settings to Default but keep the ID context
+                    await setSettings(defaultSettings);
+                    setShowSettings(false);
+                    showToast("資料已重置");
+                }
+            };
+
+            const renderContent = () => {
+                switch(activeTab) {
+                    case 'itinerary': 
+                        return <ItineraryView items={itineraryItems} setItems={setItineraryItems} settings={settings} openSettings={() => setShowSettings(true)} showToast={showToast} isSyncing={syncingItinerary} />;
+                    case 'guide': 
+                        return <GuideView guides={guides} setGuides={setGuides} showToast={showToast} />;
+                    case 'expenses': 
+                        return <ExpenseView expenses={expenses} setExpenses={setExpenses} users={users} setUsers={setUsers} showToast={showToast} />;
+                    default: 
+                        return <ItineraryView items={itineraryItems} setItems={setItineraryItems} settings={settings} openSettings={() => setShowSettings(true)} showToast={showToast} />;
+                }
+            };
+
+            return (
+                <div id="app-container">
+                    {(syncingSettings || syncingItinerary || syncingExpenses) && <div className="fixed top-3 right-3 w-3 h-3 bg-[var(--accent-green)] rounded-full animate-ping z-[200]"></div>}
+                    <div key={activeTab} style={{height: '100%', width: '100%', position: 'absolute', top: 0, left: 0}}>
+                        {renderContent()}
+                    </div>
+                    <TabBar activeTab={activeTab} setActiveTab={setActiveTab} />
+                    <Toast message={toast.msg} visible={toast.visible} />
+                    
+                    {/* Settings Modal */}
+                    <SettingsModal 
+                        isOpen={showSettings} 
+                        onClose={() => setShowSettings(false)}
+                        settings={settings}
+                        updateSettings={setSettings}
+                        tripId={tripId}
+                        setTripId={setTripId}
+                        onReset={handleReset}
+                    />
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
