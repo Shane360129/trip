@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- PWA Settings: Make it feel like a real app -->
+    <!-- PWA Settings -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="format-detection" content="telephone=no">
     <meta name="theme-color" content="#FFFCF5">
     
-    <title>Universal Travel Planner </title>
+    <title>Travel Planner (UI Fixes)</title>
     
     <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -35,19 +35,19 @@
 
     <style>
         :root {
-            /* 🎨 2026 可愛文青配色盤 */
-            --bg-color: #FFFCF5;        
-            --text-main: #594A42;       
-            --text-sub: #8C7B75;        
+            /* 🎨 文青地圖配色盤 (Earth Tones) */
+            --bg-color: #Fdfbf7;        /* 羊皮紙白 */
+            --text-main: #4a403a;       /* 深褐 */
+            --text-sub: #8c837b;        /* 淺褐 */
             
-            --accent-pink: #FFB7B2;     
-            --accent-green: #AACD6E;    
-            --accent-yellow: #FFD966;   
-            --accent-blue: #89CFF0;     
-            --accent-orange: #FFDAC1;   
-            --accent-purple: #CAB8D9;   
+            --accent-main: #d4a373;     /* 拿鐵金 */
+            --accent-green: #ccd5ae;    /* 抹茶 */
+            --accent-blue: #a2d2ff;     /* 霧霾藍 */
+            --accent-pink: #e5989b;     /* 乾燥玫瑰 */
+            --accent-red: #d62828;      /* 印泥紅 */
+            --accent-purple: #b5838d;   /* 芋泥紫 */
             
-            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-bg: rgba(255, 255, 255, 0.85); /* 稍微透明一點，透出背景 */
             --safe-bottom: env(safe-area-inset-bottom);
         }
 
@@ -61,22 +61,18 @@
             font-family: 'Zen Maru Gothic', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
-            /* App-like behavior: No tap highlight, no overscroll bounce */
             -webkit-tap-highlight-color: transparent;
-            overscroll-behavior-y: none; /* 關鍵：防止整個網頁被拉動 */
-            user-select: none; /* 關鍵：防止長按選取文字，讓介面更像 App */
+            overscroll-behavior-y: none; 
+            user-select: none; 
             -webkit-user-select: none;
             
-            background-image: 
-                linear-gradient(var(--bg-color) 95%, transparent 95%),
-                linear-gradient(90deg, var(--bg-color) 95%, transparent 95%),
-                linear-gradient(#E8E0D5 1px, transparent 1px),
-                linear-gradient(90deg, #E8E0D5 1px, transparent 1px);
-            background-size: 100% 100%, 100% 100%, 20px 20px, 20px 20px;
-            background-position: 0 0, 0 0, -1px -1px, -1px -1px;
+            /* 🌍 世界地圖背景 (SVG Data URI - 簡化版世界地圖輪廓) */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1000' height='500' viewBox='0 0 1000 500'%3E%3Cg fill='%23d4a373' fill-opacity='0.12'%3E%3Cpath d='M195.5 127.5c-4.5-2-8.5.5-9 4.5-.5 3 2.5 6.5 6 7.5 3.5.5 6.5-1.5 8-4 2-3.5 1-7-2.5-8.5l-2.5.5zm168.5 70c-3.5-1-6.5 1.5-5 4.5 1 3.5 4.5 4.5 7.5 2.5 3.5-1.5 3.5-5.5 1.5-8.5-1-1.5-2.5-2-4 1.5zm-135 55c-3.5-1-6 2.5-5 5.5 1 3.5 4.5 4.5 7.5 2 3-2 3-5.5 1-8-1-1.5-2-2-3.5.5zm260-45c-3.5 0-5.5 2-5.5 5 0 3 3 5 5.5 5 3 0 5.5-2 5.5-5 0-3-2.5-5-5.5-5zm-45 115c-3 1-4 4-3 6.5 1 3 4 4 6.5 3 3-1 4-4 3-6.5-1-3-4-4-6.5-3zm-230-50c-3 2-3 5.5-1 8 2 3 5.5 3 8 1 3-2 3-5.5 1-8-2-3-5.5-3-8-1zm200 30c-3 1-4 4-3 7 1 3 4 4 7 3 3-1 4-4 3-7-1-3-4-4-7-3zm-105-65c-3 2-3 5.5-1 8 2 3 5.5 3 8 1 3-2 3-5.5 1-8-2-3-5.5-3-8-1zm-160 130c-2.5 2.5-2 6 .5 8.5 2.5 2.5 6 2 8.5-.5 2.5-2.5 2-6-.5-8.5-2.5-2-6-2-8.5.5zm450-95c-2.5 2.5-2 6 .5 8.5 2.5 2.5 6 2 8.5-.5 2.5-2.5 2-6-.5-8.5-2.5-2.5-6-2-8.5.5zm-70 130c-2 2.5-1.5 6 1 8 2.5 2 6 1.5 8-1 2-2.5 1.5-6-1-8-2.5-2-6-1.5-8 1zm-470-45c-2 2.5-1.5 6.5 1 8.5 2.5 2 6.5 1.5 8.5-1 2-2.5 1.5-6.5-1-8.5-2.5-2-6.5-1.5-8.5 1zM850 150c-10 5-15 20-10 30 5 10 20 15 30 10 10-5 15-20 10-30-5-10-20-15-30-10zM750 350c-8 6-6 20 4 26 10 6 24-4 20-16-2-10-16-14-24-10zM150 350c5 10 20 10 25 0 5-10-5-20-15-20-10 0-15 10-10 20z'/%3E%3C/g%3E%3C/svg%3E");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
 
-        /* 恢復輸入框的選取功能 */
         input, textarea {
             user-select: text;
             -webkit-user-select: text;
@@ -97,7 +93,6 @@
             padding-bottom: calc(100px + var(--safe-bottom));
             position: relative;
             z-index: 10;
-            /* Allow scrolling inside the container */
             overscroll-behavior-y: contain; 
         }
 
@@ -105,11 +100,11 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
         .tab-bar-glass {
-            background: rgba(255, 255, 255, 0.92);
+            background: rgba(255, 255, 255, 0.90);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border-top: 2px solid #F0E6DD;
-            box-shadow: 0 -8px 20px rgba(89, 74, 66, 0.05);
+            border-top: 1px solid rgba(212, 163, 115, 0.2); /* 邊框改為拿鐵色 */
+            box-shadow: 0 -4px 30px rgba(0,0,0,0.05);
             position: absolute;
             bottom: 0;
             left: 0;
@@ -118,37 +113,27 @@
             border-radius: 24px 24px 0 0;
         }
 
+        /* 郵戳風格便利貼 */
         .sticky-note {
-            background-color: #FFFAEE;
-            border: 2px dashed var(--accent-yellow);
+            background-color: #fffcf0;
+            border: 1px solid #e6dcc8;
             padding: 12px 14px;
             margin-top: 10px;
-            border-radius: 12px;
-            box-shadow: 2px 2px 0px rgba(255, 217, 102, 0.4);
+            border-radius: 4px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.03);
             font-size: 0.9rem;
-            color: var(--text-main);
+            color: #5d5550;
             line-height: 1.6;
             position: relative;
+            transform: rotate(-0.5deg);
         }
-        .sticky-note::before {
-            content: '';
-            position: absolute;
-            top: -8px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 12px;
-            background: rgba(255, 255, 255, 0.4);
-            border: 1px solid #E0E0E0;
-            transform: rotate(-2deg);
-        }
-        
+        /* 貼紙圖層 */
         .sticker {
             position: absolute;
             pointer-events: none;
             z-index: 0;
-            opacity: 0.2; 
-            filter: saturate(1.2);
+            opacity: 0.9; /* 貼紙要清楚一點 */
+            filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.1)); /* 貼紙陰影 */
             transition: transform 0.3s ease;
         }
         
@@ -163,57 +148,57 @@
             overflow: hidden;
         }
 
-        .page-enter { animation: pageSlideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        .page-enter { animation: pageSlideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
         @keyframes pageSlideUp { 
-            0% { opacity: 0; transform: translateY(30px) scale(0.95); } 
+            0% { opacity: 0; transform: translateY(20px) scale(0.98); } 
             100% { opacity: 1; transform: translateY(0) scale(1); } 
         }
 
-        .stagger-item { opacity: 0; animation: itemPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        .stagger-item { opacity: 0; animation: itemPop 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
         @keyframes itemPop { 
-            from { opacity: 0; transform: scale(0.9) translateY(10px); } 
-            to { opacity: 1; transform: scale(1) translateY(0); } 
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); } 
         }
 
-        @keyframes modalPop {
-            from { opacity: 0; transform: scale(0.9); }
+        @keyframes modalUp {
+            from { opacity: 0; transform: scale(0.95); }
             to { opacity: 1; transform: scale(1); }
         }
-        .animate-modal { animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        .animate-modal { animation: modalUp 0.25s cubic-bezier(0.2, 0.9, 0.2, 1) forwards; }
 
         .input-cute {
             background: #FFF;
-            border: 2px solid #F0E6DD;
-            border-radius: 16px;
-            padding: 14px 16px;
+            border: 2px solid #E8E0D5;
+            border-radius: 12px;
+            padding: 12px 14px;
             width: 100%;
             outline: none;
             font-size: 1rem;
             color: var(--text-main);
-            font-weight: 700;
+            font-weight: 500;
             transition: all 0.3s;
             margin-bottom: 12px;
-            box-shadow: inset 2px 2px 4px rgba(0,0,0,0.02);
+            box-shadow: inset 1px 1px 3px rgba(0,0,0,0.03);
         }
         .input-cute:focus { 
-            border-color: var(--accent-blue); 
-            box-shadow: 0 0 0 4px rgba(137, 207, 240, 0.2);
+            border-color: var(--accent-main); 
+            background: #fffefb;
+            box-shadow: 0 0 0 3px rgba(212, 163, 115, 0.2);
         }
 
         .card-cute {
             background: var(--card-bg);
-            border-radius: 24px;
-            border: 2px solid #FFF;
-            box-shadow: 4px 4px 10px rgba(89, 74, 66, 0.05), -4px -4px 10px rgba(255,255,255,0.8);
-            backdrop-filter: blur(8px);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.8);
+            box-shadow: 0 4px 20px rgba(212, 163, 115, 0.1); /* 暖色陰影 */
+            backdrop-filter: blur(12px);
         }
 
-        /* 拍立得風格 */
         .card-polaroid {
             background: #FFF;
-            padding: 12px 12px 30px 12px;
-            border-radius: 4px;
-            box-shadow: 3px 3px 8px rgba(0,0,0,0.1);
+            padding: 10px 10px 30px 10px;
+            border-radius: 2px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
             transform: rotate(-1deg);
             transition: transform 0.2s;
         }
@@ -224,59 +209,56 @@
         .polaroid-img {
             width: 100%;
             aspect-ratio: 1/1;
-            background-color: #F0F0F0;
+            background-color: #f4f4f4;
             object-fit: cover;
-            border: 1px solid #EEE;
-            margin-bottom: 10px;
+            border: 1px solid #eee;
+            margin-bottom: 8px;
         }
 
         .btn-pill {
             border-radius: 99px;
-            font-weight: 900;
+            font-weight: 700;
             letter-spacing: 0.5px;
-            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             display: flex;
             align-items: center;
             justify-content: center;
-            /* Remove tap delay */
             touch-action: manipulation; 
         }
         .btn-pill:active:not(:disabled) {
-            transform: translateY(4px);
-            box-shadow: 0 0 0 rgba(0,0,0,0);
+            transform: scale(0.96);
+            box-shadow: none;
         }
         .btn-pill:disabled {
-            opacity: 0.6;
+            opacity: 0.5;
             cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-            filter: grayscale(0.5);
         }
 
-        .btn-primary { background: var(--accent-pink); color: white; }
+        .btn-primary { background: var(--accent-main); color: white; }
         .btn-secondary { background: var(--accent-blue); color: white; }
         .btn-success { background: var(--accent-green); color: white; }
-        .btn-warning { background: var(--accent-yellow); color: #7A6000; }
+        .btn-warning { background: var(--accent-yellow); color: #594a42; }
         .btn-purple { background: var(--accent-purple); color: white; }
-        .btn-danger { background: #FF8A80; color: white; }
+        .btn-danger { background: var(--accent-red); color: white; }
 
         .date-active {
             background-color: var(--accent-green);
             color: white;
-            transform: translateY(-4px) rotate(-2deg);
-            box-shadow: 3px 3px 0 #88A858;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(204, 213, 174, 0.6);
         }
         .date-active-snow {
             background-color: var(--accent-blue);
             color: white;
-            transform: translateY(-4px) rotate(2deg);
-            box-shadow: 3px 3px 0 #6BAED6;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(162, 210, 255, 0.6);
         }
         .date-inactive {
-            background-color: white;
-            color: #C0B0A8;
-            border: 2px solid #F0E6DD;
+            background-color: rgba(255,255,255,0.7);
+            color: #aaa;
+            border: 1px solid #e0e0e0;
+            backdrop-filter: blur(4px);
         }
 
         .pb-safe { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
@@ -284,35 +266,54 @@
         .toast-enter { animation: toastSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
         @keyframes toastSlideUp { from { transform: translate(-50%, 120%); } to { transform: translate(-50%, 0); } }
 
-        /* Loading Spinner */
         .spinner {
             width: 18px;
             height: 18px;
-            border: 3px solid rgba(255,255,255,0.3);
+            border: 2px solid rgba(255,255,255,0.3);
             border-radius: 50%;
             border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
-            margin-right: 8px;
+            animation: spin 0.8s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Splash Screen */
-        .splash-screen {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-color);
+        /* Landing Page - Passport Style */
+        .landing-container {
             display: flex;
             flex-direction: column;
-            align-items: center;
             justify-content: center;
-            z-index: 9999;
-            transition: opacity 0.5s ease;
+            align-items: center;
+            height: 100vh;
+            padding: 30px;
+            background: transparent;
+            position: relative;
+            z-index: 20;
         }
-        .splash-logo {
-            font-size: 4rem;
-            animation: float 2s ease-in-out infinite;
+        .passport-card {
+            background: #fff;
+            width: 100%;
+            max-width: 320px;
+            border-radius: 20px;
+            padding: 40px 30px;
+            box-shadow: 0 20px 50px rgba(212, 163, 115, 0.25);
+            border: 1px solid rgba(255,255,255,0.8);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+            background: rgba(255,255,255,0.85);
         }
-        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
+        /* Passport decorative lines */
+        .passport-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 8px;
+            background: repeating-linear-gradient(45deg, #e5989b, #e5989b 10px, transparent 10px, transparent 20px, #a2d2ff 20px, #a2d2ff 30px, transparent 30px, transparent 40px);
+        }
+        .passport-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; width: 100%; height: 8px;
+            background: repeating-linear-gradient(45deg, #ccd5ae, #ccd5ae 10px, transparent 10px, transparent 20px, #d4a373 20px, #d4a373 30px, transparent 30px, transparent 40px);
+        }
     </style>
 </head>
 <body>
@@ -321,9 +322,6 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
 
-        // ==========================================
-        // ⚠️⚠️⚠️  Firebase 設定區  ⚠️⚠️⚠️
-        // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyDbYkxvrEFMfltDnn_8fxLpPLDLZU3HscQ",
             authDomain: "travel-a01b4.firebaseapp.com",
@@ -338,8 +336,7 @@
         }
         const db = firebase.firestore();
 
-        // --- Icons ---
-        const Icon = ({ name, size = 20, className, color = "currentColor", strokeWidth = 3 }) => {
+        const Icon = ({ name, size = 20, className, color = "currentColor", strokeWidth = 2.5 }) => {
             const iconData = lucide.icons[name];
             if (!iconData) return null;
             return (
@@ -349,13 +346,7 @@
             );
         };
 
-        // --- Default Data ---
-        const defaultSettings = {
-            title: '我的快樂旅程',
-            startDate: '2026-01-18', 
-            duration: 5, 
-            bgIcon: '✈️'
-        };
+        const defaultSettings = { title: 'My Awesome Trip', startDate: '2026-01-18', duration: 5, bgIcon: '✈️' };
         const defaultItinerary = [];
         const defaultExpenses = [];
         const defaultUsers = ['我', '旅伴A'];
@@ -371,7 +362,7 @@
                 } catch { return defaultValue; }
             });
             const [isSyncing, setIsSyncing] = useState(false);
-            const [isLoaded, setIsLoaded] = useState(false); // Track initial load
+            const [isLoaded, setIsLoaded] = useState(false);
 
             useEffect(() => {
                 if (!db || !tripId) {
@@ -402,10 +393,7 @@
                     try {
                         await db.collection(collectionName).doc(tripId).update({ [fieldName]: newData });
                     } catch (e) {
-                        console.error("Write Error:", e);
-                        if (e.code === 'not-found') {
-                             await db.collection(collectionName).doc(tripId).set({ [fieldName]: newData }, { merge: true });
-                        }
+                        if (e.code === 'not-found') await db.collection(collectionName).doc(tripId).set({ [fieldName]: newData }, { merge: true });
                     } finally {
                         setIsSyncing(false);
                     }
@@ -414,7 +402,6 @@
             return [data, updateData, isSyncing, isLoaded];
         };
 
-        // --- Shared Components ---
         const Toast = ({ message, visible }) => {
             if (!visible) return null;
             return (
@@ -424,28 +411,6 @@
                 </div>
             );
         };
-
-        const SplashScreen = ({ visible }) => {
-            if (!visible) return null;
-            return (
-                <div className="splash-screen">
-                    <div className="splash-logo">✈️</div>
-                    <h1 className="text-2xl font-black text-[var(--text-main)] mt-4">Travel Planner</h1>
-                    <p className="text-sm text-[var(--text-sub)] mt-2 font-bold animate-pulse">Loading...</p>
-                </div>
-            );
-        };
-
-        const BackgroundStickers = () => (
-            <div className="bg-sticker-layer">
-                <div className="sticker text-6xl" style={{top: '5%', left: '5%', transform: 'rotate(-10deg)'}}>☁️</div>
-                <div className="sticker text-6xl" style={{top: '15%', right: '10%', transform: 'rotate(15deg)'}}>✨</div>
-                <div className="sticker text-8xl" style={{bottom: '25%', right: '-5%', transform: 'rotate(10deg)'}}>🗺️</div>
-                <div className="sticker text-6xl" style={{top: '70%', right: '60%', transform: 'rotate(5deg)'}}>🎒</div>
-                <div className="sticker text-4xl" style={{top: '2%', right: '40%', opacity: 0.1}}>✈️</div>
-                <div className="sticker text-9xl" style={{top: '40%', left: '30%', opacity: 0.05, filter: 'grayscale(100%)'}}>🌏</div>
-            </div>
-        );
 
         const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, confirmText = "確定", confirmColor = "btn-danger", isLoading = false }) => {
             if (!isOpen) return null;
@@ -469,88 +434,101 @@
             const days = [];
             const start = new Date(startDateStr);
             const weekDays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
-            
             for (let i = 0; i < duration; i++) {
                 const current = new Date(start);
                 current.setDate(start.getDate() + i);
                 const month = current.getMonth() + 1;
                 const date = current.getDate();
                 const week = weekDays[current.getDay()];
-                days.push({
-                    day: i + 1,
-                    date: `${month}/${date}`,
-                    week: week,
-                    fullDate: current 
-                });
+                days.push({ day: i + 1, date: `${month}/${date}`, week: week });
             }
             return days;
         };
 
-        // --- Views ---
+        // --- Background Stickers (Modified to be World Landmarks) ---
+        const BackgroundStickers = () => (
+            <div className="bg-sticker-layer">
+                {/* 🗼 Tokyo Tower */}
+                <div className="sticker text-7xl" style={{top: '5%', right: '8%', transform: 'rotate(10deg)'}}>🗼</div>
+                {/* 🗽 Statue of Liberty */}
+                <div className="sticker text-6xl" style={{bottom: '15%', left: '5%', transform: 'rotate(-10deg)'}}>🗽</div>
+                {/* 🗻 Mount Fuji */}
+                <div className="sticker text-6xl" style={{top: '20%', left: '10%', transform: 'rotate(-5deg)'}}>🗻</div>
+                {/* 🏰 European Castle */}
+                <div className="sticker text-6xl" style={{bottom: '30%', right: '10%', transform: 'rotate(15deg)'}}>🏰</div>
+                {/* 🗿 Moai */}
+                <div className="sticker text-5xl" style={{top: '50%', right: '80%', transform: 'rotate(20deg)', opacity: 0.3}}>🗿</div>
+                {/* ✈️ Airplane */}
+                <div className="sticker text-4xl" style={{top: '10%', left: '40%', opacity: 0.2, transform: 'rotate(45deg)'}}>✈️</div>
+            </div>
+        );
 
-        const SettingsModal = ({ isOpen, onClose, settings, updateSettings, tripId, setTripId, onReset }) => {
-            if (!isOpen) return null;
-            const [localSettings, setLocalSettings] = useState(settings);
-            const [localTripId, setLocalTripId] = useState(tripId);
+        // --- Landing Page ---
+        const LandingView = ({ onJoin }) => {
+            const [inputTripId, setInputTripId] = useState('');
+            const [error, setError] = useState('');
 
-            const handleSave = () => {
-                if (!localTripId.trim()) return alert("請輸入有效的資料庫 ID");
-                setTripId(localTripId.trim()); 
-                updateSettings(localSettings); 
-                onClose();
+            useEffect(() => {
+                const lastId = window.localStorage.getItem('current_trip_id');
+                if (lastId) setInputTripId(lastId);
+            }, []);
+
+            const handleSubmit = () => {
+                if (!inputTripId.trim()) {
+                    setError('請輸入旅程 ID');
+                    return;
+                }
+                // Regex: Allow letters, numbers, underscore, hyphen
+                const isValid = /^[a-zA-Z0-9_-]+$/.test(inputTripId);
+                if (!isValid) {
+                    setError('ID 只能包含英文字母、數字、底線或連字號');
+                    return;
+                }
+                onJoin(inputTripId.trim());
             };
 
             return (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150] flex items-center justify-center p-4 animate-modal" onClick={onClose}>
-                    <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border-4 border-[#F0E6DD]" onClick={e => e.stopPropagation()}>
-                        <h3 className="text-xl font-black mb-4 text-[var(--text-main)] flex items-center gap-2">
-                            <Icon name="Settings" size={20} /> 旅程設定
-                        </h3>
+                <div className="landing-container page-enter">
+                    <BackgroundStickers />
+                    <div className="passport-card">
+                        <div className="text-center mb-8">
+                            <div className="w-20 h-20 bg-[var(--accent-main)] rounded-full mx-auto flex items-center justify-center text-white mb-4 shadow-lg border-4 border-white">
+                                <Icon name="Plane" size={40} />
+                            </div>
+                            <h1 className="text-3xl font-black text-[var(--text-main)] tracking-tight">TRAVEL LOG</h1>
+                            <p className="text-xs text-[var(--accent-main)] font-bold uppercase tracking-[0.2em] mt-1">Your Journey Starts Here</p>
+                        </div>
                         
-                        <div className="space-y-4">
-                            <div className="bg-blue-50 p-3 rounded-2xl border border-blue-100">
-                                <label className="text-xs font-bold text-blue-500 ml-1 mb-1 block flex items-center gap-1">
-                                    <Icon name="Database" size={12}/> 資料庫識別碼 (Trip ID)
+                        <div className="space-y-5">
+                            <div>
+                                <label className="text-xs font-bold text-gray-400 ml-1 mb-2 block flex items-center justify-center gap-1">
+                                    <Icon name="Key" size={12}/> ENTER TRIP ID
                                 </label>
                                 <input 
                                     type="text" 
-                                    value={localTripId} 
-                                    onChange={e => setLocalTripId(e.target.value)} 
-                                    className="input-cute mb-1 text-sm font-mono border-blue-200 focus:border-blue-400" 
-                                    placeholder="例如: trip_osaka_2026"
+                                    value={inputTripId}
+                                    onChange={(e) => { setInputTripId(e.target.value); setError(''); }}
+                                    className="input-cute text-center font-mono text-xl tracking-wider uppercase border-2 focus:border-[var(--accent-main)] py-3"
+                                    placeholder="e.g. TOKYO2026"
+                                    onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
                                 />
-                                <p className="text-[10px] text-blue-400 leading-tight">
-                                    ⚠️ 修改此 ID 將切換到不同的行程資料庫。請與旅伴使用相同的 ID。
-                                </p>
+                                {error && <p className="text-red-400 text-xs font-bold mt-2 text-center animate-pulse">{error}</p>}
                             </div>
-
-                            <hr className="border-gray-100"/>
-
-                            <div>
-                                <label className="text-xs font-bold text-gray-400 ml-1">旅程名稱</label>
-                                <input type="text" value={localSettings.title} onChange={e => setLocalSettings({...localSettings, title: e.target.value})} className="input-cute" />
-                            </div>
-                            <div className="flex gap-3">
-                                <div className="flex-1">
-                                    <label className="text-xs font-bold text-gray-400 ml-1">出發日期</label>
-                                    <input type="date" value={localSettings.startDate} onChange={e => setLocalSettings({...localSettings, startDate: e.target.value})} className="input-cute" />
-                                </div>
-                                <div className="w-24">
-                                    <label className="text-xs font-bold text-gray-400 ml-1">天數</label>
-                                    <input type="number" min="1" max="30" value={localSettings.duration} onChange={e => setLocalSettings({...localSettings, duration: parseInt(e.target.value)})} className="input-cute" />
-                                </div>
-                            </div>
+                            
+                            <button onClick={handleSubmit} className="w-full py-4 btn-pill btn-primary shadow-xl text-lg mt-2 transition-transform active:scale-95">
+                                <span>GO</span> <Icon name="ArrowRight" size={20} className="ml-2"/>
+                            </button>
                         </div>
-                        
-                        <div className="mt-8 space-y-3">
-                            <button onClick={handleSave} className="w-full py-3 btn-success btn-pill font-bold shadow-lg">儲存並切換</button>
-                            <button onClick={onReset} className="w-full py-3 text-red-400 font-bold bg-red-50 rounded-2xl btn-pill border border-red-100">清空此 ID 的資料 (Reset)</button>
-                        </div>
+                    </div>
+                    <div className="mt-8 text-[10px] text-gray-400 font-bold opacity-60">
+                        Universal Travel Planner v4.1
                     </div>
                 </div>
             );
         };
 
+        // --- Main App Logic ---
+        
         const ItineraryView = ({ items, setItems, settings, openSettings, showToast }) => {
             const [selectedDay, setSelectedDay] = useState(1);
             const [isAdding, setIsAdding] = useState(false);
@@ -580,7 +558,7 @@
                 setIsSaving(false);
                 setIsAdding(false); 
                 setNewItem({ time: '', title: '', location: '', note: '' }); 
-                showToast("已新增行程");
+                showToast("已新增");
             };
 
             const handleUpdate = async () => {
@@ -589,12 +567,10 @@
                 await setItems(items.map(i => i.id === editingItem.id ? editingItem : i));
                 setIsSaving(false);
                 setEditingItem(null); 
-                showToast("行程已更新");
+                showToast("已更新");
             };
 
-            useEffect(() => {
-                if (selectedDay > settings.duration) setSelectedDay(1);
-            }, [settings.duration]);
+            useEffect(() => { if (selectedDay > settings.duration) setSelectedDay(1); }, [settings.duration]);
 
             return (
                 <div className="flex flex-col h-full w-full page-enter">
@@ -603,19 +579,12 @@
                         <header className="mb-6 mt-2 flex justify-between items-start relative z-20">
                             <div>
                                 <div className="text-xs font-bold text-[var(--accent-blue)] uppercase tracking-widest mb-1">Travel Plan</div>
-                                <h1 className="text-2xl font-black text-[var(--text-main)] tracking-tight leading-tight max-w-[200px]">
-                                    {settings.title}
-                                </h1>
+                                <h1 className="text-2xl font-black text-[var(--text-main)] tracking-tight leading-tight max-w-[200px]">{settings.title}</h1>
                                 <div className="text-xs text-gray-400 font-bold mt-1">{settings.startDate} 出發 • {settings.duration} 天</div>
                             </div>
                             <div className="flex gap-2">
-                                <button onClick={openSettings} className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-gray-400 active:scale-95">
-                                    <Icon name="Settings" size={20} />
-                                </button>
-                                <button onClick={() => setIsAdding(true)} className="btn-pill btn-primary px-4 py-2 flex items-center gap-1 shadow-lg active:scale-95">
-                                    <Icon name="Plus" size={18} strokeWidth={3} />
-                                    <span>新增</span>
-                                </button>
+                                <button onClick={openSettings} className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-gray-400 active:scale-95"><Icon name="Settings" size={20} /></button>
+                                <button onClick={() => setIsAdding(true)} className="btn-pill btn-primary px-4 py-2 flex items-center gap-1 shadow-lg active:scale-95"><Icon name="Plus" size={18} /><span>新增</span></button>
                             </div>
                         </header>
 
@@ -648,13 +617,13 @@
                                     </div>
                                 </div>
                             ))}
-                            {filteredItems.length === 0 && <div className="text-center py-20 opacity-40"><div className="text-5xl mb-3 grayscale">💤</div><div className="font-bold text-sm">這天還沒有行程喔</div></div>}
+                            {filteredItems.length === 0 && <div className="text-center py-20 opacity-40"><div className="text-5xl mb-3 grayscale">💤</div><div className="font-bold text-sm">暫無行程</div></div>}
                         </div>
                     </div>
 
                     {(isAdding || editingItem) && (
                         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-modal" onClick={() => { if(!isSaving) { setIsAdding(false); setEditingItem(null); }}}>
-                            <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl overflow-y-auto max-h-[80vh] relative border-4 border-[#F0E6DD]" onClick={e => e.stopPropagation()}>
+                            <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl overflow-y-auto max-h-[85vh] relative border-4 border-[#F0E6DD]" onClick={e => e.stopPropagation()}>
                                 <h3 className="text-xl font-black mb-6 text-[var(--text-main)] flex items-center gap-2">
                                     <span className="bg-[var(--accent-yellow)] w-8 h-8 rounded-full flex items-center justify-center text-white"><Icon name="PenLine" size={18}/></span>
                                     {isAdding ? '新增行程' : '編輯行程'}
@@ -667,21 +636,120 @@
                                 </div>
                                 <div className="flex gap-3 mt-8">
                                     <button onClick={() => { setIsAdding(false); setEditingItem(null); }} disabled={isSaving} className="flex-1 py-3 text-gray-500 font-bold bg-gray-100 rounded-2xl btn-pill">取消</button>
-                                    <button onClick={isAdding ? handleAdd : handleUpdate} disabled={isSaving} className="flex-1 py-3 btn-success btn-pill font-bold shadow-lg">
-                                        {isSaving ? <div className="spinner"></div> : (isAdding ? '加入' : '更新')}
-                                    </button>
+                                    <button onClick={isAdding ? handleAdd : handleUpdate} disabled={isSaving} className="flex-1 py-3 btn-success btn-pill font-bold shadow-lg">{isSaving ? <div className="spinner"></div> : (isAdding ? '加入' : '更新')}</button>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    <ConfirmModal 
-                        isOpen={!!deleteTarget} 
-                        title="刪除行程？" 
-                        onConfirm={confirmDelete} 
-                        onCancel={() => setDeleteTarget(null)} 
-                        isLoading={isSaving}
-                    />
+                    <ConfirmModal isOpen={!!deleteTarget} title="刪除行程？" onConfirm={confirmDelete} onCancel={() => setDeleteTarget(null)} isLoading={isSaving} />
+                </div>
+            );
+        };
+
+        const ShoppingView = ({ shopping, setShopping, showToast }) => {
+            const [isAdding, setIsAdding] = useState(false);
+            const [newItem, setNewItem] = useState({ name: '', price: '', note: '', image: '' });
+            const [deleteTarget, setDeleteTarget] = useState(null);
+            const [isSaving, setIsSaving] = useState(false);
+
+            const handleAdd = async () => {
+                if (!newItem.name) return;
+                setIsSaving(true);
+                await setShopping([...shopping, { ...newItem, id: Date.now(), bought: false }]);
+                setIsSaving(false); setIsAdding(false); setNewItem({ name: '', price: '', note: '', image: '' }); showToast("商品已新增");
+            };
+            const toggleBought = async (item) => { setShopping(shopping.map(i => i.id === item.id ? { ...i, bought: !i.bought } : i)); };
+            const confirmDelete = async () => {
+                if (deleteTarget) { setIsSaving(true); await setShopping(shopping.filter(i => i.id !== deleteTarget)); setIsSaving(false); showToast("已刪除"); setDeleteTarget(null); }
+            };
+            const handleSearchImage = (e, name) => {
+                e.preventDefault(); e.stopPropagation();
+                const searchTerm = (name && name.trim()) ? name : (newItem.image && !newItem.image.startsWith('http') ? newItem.image : null);
+                if(!searchTerm) { showToast("請先在上方『商品名稱』欄位輸入文字喔 😅"); return; }
+                const win = window.open(`https://www.google.com/search?tbm=isch&q=${encodeURIComponent(searchTerm)}`, '_blank');
+                if (!win) showToast("開啟失敗，請允許彈跳視窗 ⚠️");
+            }
+            const totalEstimated = shopping.reduce((acc, item) => acc + (parseFloat(item.price) || 0), 0);
+
+            return (
+                <div className="p-5 h-full relative z-10 animate-fade-in scroll-container page-enter">
+                    <BackgroundStickers />
+                    <header className="mb-6 flex justify-between items-center relative z-20">
+                         <div><h1 className="text-3xl font-black text-[var(--text-main)] flex items-center gap-2">購物清單 <span className="text-2xl">🛍️</span></h1><div className="text-xs font-bold text-[var(--accent-purple)] mt-1 ml-1">預算總計: ¥{totalEstimated.toLocaleString()}</div></div>
+                         <button onClick={() => setIsAdding(true)} className="w-10 h-10 rounded-full bg-[var(--accent-purple)] text-white shadow-lg flex items-center justify-center active:scale-90 transition-transform"><Icon name="Plus" size={20} strokeWidth={3}/></button>
+                    </header>
+                    <div className="grid grid-cols-2 gap-4 pb-24 relative z-10">
+                        {shopping.map((item, i) => (
+                            <div key={item.id} className="card-polaroid stagger-item relative" style={{animationDelay: `${i*0.05}s`}}>
+                                <div className="absolute top-2 right-2 z-20 flex gap-1"><button onClick={() => setDeleteTarget(item.id)} className="w-6 h-6 bg-white/80 rounded-full flex items-center justify-center text-red-400 shadow-sm"><Icon name="Trash2" size={12} /></button></div>
+                                <div className="polaroid-img overflow-hidden relative">
+                                    {item.image ? <img src={item.image} alt={item.name} className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://via.placeholder.com/150?text=No+Image'} /> : <div className="w-full h-full flex items-center justify-center text-gray-300 bg-gray-100"><Icon name="Image" size={32}/></div>}
+                                    {item.bought && <div className="absolute inset-0 bg-black/40 flex items-center justify-center"><div className="bg-[var(--accent-green)] text-white px-3 py-1 rounded-full text-xs font-bold transform -rotate-12 border-2 border-white shadow-lg">BOUGHT!</div></div>}
+                                </div>
+                                <div className="text-center"><h4 className="font-bold text-[var(--text-main)] truncate text-sm">{item.name}</h4><div className="text-xs text-gray-400 font-mono mt-1">¥{item.price || '-'}</div><button onClick={() => toggleBought(item)} className={`mt-2 w-full py-1.5 rounded-md text-xs font-bold transition-colors ${item.bought ? 'bg-gray-100 text-gray-400' : 'bg-[var(--accent-purple)] text-white'}`}>{item.bought ? '已購買' : '標示購買'}</button></div>
+                            </div>
+                        ))}
+                        {shopping.length === 0 && <div className="col-span-2 text-center py-20 opacity-40"><div className="text-5xl mb-3 grayscale">🛒</div><div className="font-bold text-sm">還沒想買的東西嗎？</div></div>}
+                    </div>
+                    {isAdding && (
+                        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-modal" onClick={() => { if(!isSaving) setIsAdding(false); }}>
+                            <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl overflow-y-auto max-h-[85vh] relative border-4 border-[#F0E6DD]" onClick={e => e.stopPropagation()}>
+                                <h3 className="text-xl font-black mb-4 text-[var(--text-main)]">新增想買的東西</h3>
+                                <div className="space-y-4">
+                                    <div><label className="text-xs font-bold text-gray-400 ml-1">商品名稱</label><input type="text" value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})} className="input-cute" placeholder="例: Uniqlo 發熱衣" /></div>
+                                    <div><label className="text-xs font-bold text-gray-400 ml-1">預估價格 (¥)</label><input type="number" value={newItem.price} onChange={e => setNewItem({...newItem, price: e.target.value})} className="input-cute" placeholder="1000" /></div>
+                                    <div><label className="text-xs font-bold text-gray-400 ml-1 flex justify-between items-center"><span>圖片網址</span><span onClick={(e) => handleSearchImage(e, newItem.name)} className="text-[var(--accent-blue)] cursor-pointer hover:underline flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-md transition-colors hover:bg-blue-100"><Icon name="Search" size={12}/> 去 Google 找圖</span></label><div className="flex gap-2"><input type="text" value={newItem.image} onChange={e => setNewItem({...newItem, image: e.target.value})} className="input-cute" placeholder="貼上圖片連結..." /></div>{newItem.image && <div className="h-20 w-20 rounded-lg overflow-hidden border-2 border-gray-100 mt-2"><img src={newItem.image} className="w-full h-full object-cover" onError={(e) => e.target.style.display='none'}/></div>}</div>
+                                </div>
+                                <div className="flex gap-3 mt-6"><button onClick={() => setIsAdding(false)} disabled={isSaving} className="flex-1 py-3 text-gray-500 font-bold bg-gray-100 rounded-2xl btn-pill">取消</button><button onClick={handleAdd} disabled={isSaving} className="flex-1 py-3 btn-purple btn-pill font-bold shadow-lg">{isSaving ? <div className="spinner"></div> : '加入清單'}</button></div>
+                            </div>
+                        </div>
+                    )}
+                    <ConfirmModal isOpen={!!deleteTarget} title="刪除商品？" onConfirm={confirmDelete} onCancel={() => setDeleteTarget(null)} isLoading={isSaving} />
+                </div>
+            );
+        };
+
+        const TabBar = ({ activeTab, setActiveTab }) => {
+            const tabs = [
+                { id: 'itinerary', label: '行程', icon: 'Calendar', color: 'text-[var(--accent-green)]' },
+                { id: 'guide', label: '攻略', icon: 'BookOpen', color: 'text-[var(--accent-pink)]' },
+                { id: 'shopping', label: '購物', icon: 'ShoppingBag', color: 'text-[var(--accent-purple)]' },
+                { id: 'expenses', label: '分帳', icon: 'Wallet', color: 'text-[var(--accent-yellow)]' },
+            ];
+            return (
+                <div className="tab-bar-glass pb-safe-bottom pt-3 px-2 flex justify-around z-50">
+                    {tabs.map(tab => (
+                        <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex flex-col items-center w-16 transition-all duration-300 active:scale-90 ${activeTab === tab.id ? '-translate-y-2' : 'opacity-40 hover:opacity-60'}`}>
+                            <div className={`p-2.5 rounded-2xl transition-all duration-300 ${activeTab === tab.id ? 'bg-white shadow-md rotate-3' : 'bg-transparent'}`}><Icon name={tab.icon} size={24} className={activeTab === tab.id ? tab.color : "text-gray-500"} strokeWidth={activeTab === tab.id ? 3 : 2.5} /></div>
+                            <span className={`text-[10px] mt-1 font-bold tracking-wide ${activeTab === tab.id ? 'text-[var(--text-main)]' : 'text-gray-400'}`}>{tab.label}</span>
+                        </button>
+                    ))}
+                </div>
+            );
+        };
+
+        const SettingsModal = ({ isOpen, onClose, settings, updateSettings, tripId, onReset, onChangeTrip }) => {
+            if (!isOpen) return null;
+            const [localSettings, setLocalSettings] = useState(settings);
+            
+            return (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150] flex items-center justify-center p-4 animate-modal" onClick={onClose}>
+                    <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border-4 border-[#F0E6DD]" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-xl font-black mb-4 text-[var(--text-main)] flex items-center gap-2"><Icon name="Settings" size={20} /> 旅程設定</h3>
+                        <div className="bg-blue-50 p-3 rounded-2xl border border-blue-100 mb-4 flex justify-between items-center">
+                            <div><div className="text-[10px] font-bold text-blue-400">CURRENT TRIP ID</div><div className="font-mono font-bold text-blue-600">{tripId}</div></div>
+                            <button onClick={onChangeTrip} className="text-xs bg-white px-3 py-1.5 rounded-full border border-blue-200 font-bold text-blue-500">切換</button>
+                        </div>
+                        <div className="space-y-4">
+                            <div><label className="text-xs font-bold text-gray-400 ml-1">旅程名稱</label><input type="text" value={localSettings.title} onChange={e => setLocalSettings({...localSettings, title: e.target.value})} className="input-cute" /></div>
+                            <div className="flex gap-3"><div className="flex-1"><label className="text-xs font-bold text-gray-400 ml-1">出發日期</label><input type="date" value={localSettings.startDate} onChange={e => setLocalSettings({...localSettings, startDate: e.target.value})} className="input-cute" /></div><div className="w-24"><label className="text-xs font-bold text-gray-400 ml-1">天數</label><input type="number" min="1" max="30" value={localSettings.duration} onChange={e => setLocalSettings({...localSettings, duration: parseInt(e.target.value)})} className="input-cute" /></div></div>
+                        </div>
+                        <div className="mt-8 space-y-3">
+                            <button onClick={() => { updateSettings(localSettings); onClose(); }} className="w-full py-3 btn-success btn-pill font-bold shadow-lg">儲存設定</button>
+                            <button onClick={onReset} className="w-full py-3 text-red-400 font-bold bg-red-50 rounded-2xl btn-pill border border-red-100">清空此 ID 的資料 (Reset)</button>
+                        </div>
+                    </div>
                 </div>
             );
         };
@@ -689,7 +757,6 @@
         const ExpenseView = ({ expenses, setExpenses, users, setUsers, showToast }) => {
             const [newExp, setNewExp] = useState({ title: '', amount: '', payer: '' });
             const [involvedUsers, setInvolvedUsers] = useState([]); 
-            
             const [isAddingUser, setIsAddingUser] = useState(false);
             const [newUserName, setNewUserName] = useState('');
             const [deleteTarget, setDeleteTarget] = useState(null); 
@@ -706,27 +773,17 @@
             const debtSummary = useMemo(() => {
                 let balances = {}; users.forEach(u => balances[u] = 0);
                 let totalSpent = 0;
-                
                 expenses.forEach(e => {
                     const payer = users.includes(e.payer) ? e.payer : users[0];
                     if (!payer) return;
-                    
-                    const cost = parseFloat(e.amount); 
-                    totalSpent += cost; 
-                    balances[payer] += cost; 
-                    
+                    const cost = parseFloat(e.amount); totalSpent += cost; balances[payer] += cost;
                     const splitTargets = e.involved && e.involved.length > 0 ? e.involved : users; 
                     const splitAmount = cost / splitTargets.length;
-                    
-                    splitTargets.forEach(u => {
-                        if (balances[u] !== undefined) balances[u] -= splitAmount; 
-                    });
+                    splitTargets.forEach(u => { if (balances[u] !== undefined) balances[u] -= splitAmount; });
                 });
-                
                 const debts = [];
                 const debtors = users.filter(u => balances[u] < -1).sort((a, b) => balances[a] - balances[b]);
                 const creditors = users.filter(u => balances[u] > 1).sort((a, b) => balances[b] - balances[a]);
-                
                 let i = 0, j = 0;
                 while (i < debtors.length && j < creditors.length) {
                     let debtor = debtors[i], creditor = creditors[j];
@@ -738,232 +795,47 @@
                 return { debts, totalSpent };
             }, [expenses, users]);
 
-            const handleAddUser = async () => { 
-                if (newUserName.trim() && !users.includes(newUserName.trim())) { 
-                    setIsSaving(true);
-                    await setUsers([...users, newUserName.trim()]); 
-                    setNewUserName(''); 
-                    setIsAddingUser(false); 
-                    setIsSaving(false);
-                    showToast("成員已新增"); 
-                } 
-            };
-            
-            const confirmDeleteUser = async () => {
-                if (userToDelete) {
-                    setIsSaving(true);
-                    await setUsers(users.filter(user => user !== userToDelete));
-                    setIsSaving(false);
-                    showToast("成員已移除");
-                    setUserToDelete(null);
-                }
-            };
-
-            const toggleInvolved = (user) => {
-                if (involvedUsers.includes(user)) {
-                    if (involvedUsers.length > 1) {
-                        setInvolvedUsers(involvedUsers.filter(u => u !== user));
-                    }
-                } else {
-                    setInvolvedUsers([...involvedUsers, user]);
-                }
-            };
-
-            const handleAddExpense = async () => { 
-                if (!newExp.title || !newExp.amount) return; 
-                setIsSaving(true);
-                await setExpenses([...expenses, { 
-                    ...newExp, 
-                    id: Date.now(), 
-                    amount: parseFloat(newExp.amount),
-                    involved: involvedUsers
-                }]); 
-                setNewExp({ title: '', amount: '', payer: users[0] || '' }); 
-                setInvolvedUsers(users);
-                setIsSaving(false);
-                showToast("記帳成功"); 
-            };
-            
-            const confirmDeleteExpense = async () => {
-                if (deleteTarget) {
-                    setIsSaving(true);
-                    await setExpenses(expenses.filter(e => e.id !== deleteTarget));
-                    setIsSaving(false);
-                    showToast("已刪除");
-                    setDeleteTarget(null);
-                }
-            };
+            const handleAddUser = async () => { if (newUserName.trim() && !users.includes(newUserName.trim())) { setIsSaving(true); await setUsers([...users, newUserName.trim()]); setNewUserName(''); setIsAddingUser(false); setIsSaving(false); showToast("成員已新增"); } };
+            const confirmDeleteUser = async () => { if (userToDelete) { setIsSaving(true); await setUsers(users.filter(user => user !== userToDelete)); setIsSaving(false); showToast("成員已移除"); setUserToDelete(null); } };
+            const toggleInvolved = (user) => { if (involvedUsers.includes(user)) { if (involvedUsers.length > 1) setInvolvedUsers(involvedUsers.filter(u => u !== user)); } else { setInvolvedUsers([...involvedUsers, user]); } };
+            const handleAddExpense = async () => { if (!newExp.title || !newExp.amount) return; setIsSaving(true); await setExpenses([...expenses, { ...newExp, id: Date.now(), amount: parseFloat(newExp.amount), involved: involvedUsers }]); setNewExp({ title: '', amount: '', payer: users[0] || '' }); setInvolvedUsers(users); setIsSaving(false); showToast("記帳成功"); };
+            const confirmDeleteExpense = async () => { if (deleteTarget) { setIsSaving(true); await setExpenses(expenses.filter(e => e.id !== deleteTarget)); setIsSaving(false); showToast("已刪除"); setDeleteTarget(null); } };
 
             return (
                 <div className="p-5 h-full relative z-10 animate-fade-in scroll-container page-enter">
                     <BackgroundStickers />
-                    <h1 className="text-3xl font-black text-[var(--text-main)] mb-6 flex items-center gap-2">分帳小幫手 <span className="text-2xl">💰</span></h1>
-                    
-                    {/* Users List */}
+                    <header className="mb-6 flex justify-between items-center relative z-20">
+                         <h1 className="text-3xl font-black text-[var(--text-main)] mb-6 flex items-center gap-2">分帳小幫手 <span className="text-2xl">💰</span></h1>
+                    </header>
                     <div className="mb-6 flex flex-wrap gap-2 items-center relative z-20">
-                        {users.map(u => (
-                            <div key={u} className="bg-white px-3 py-1.5 rounded-full text-sm font-bold text-gray-600 border border-gray-200 shadow-sm flex items-center gap-1">
-                                <div className="w-5 h-5 rounded-full bg-[var(--accent-blue)] text-white flex items-center justify-center text-[10px]">{u[0]}</div>
-                                {u}
-                                <button onClick={() => { 
-                                    if(users.length <= 1) return alert("至少保留一位成員");
-                                    setUserToDelete(u); 
-                                }} className="ml-1 text-gray-300 hover:text-red-400"><Icon name="X" size={12}/></button>
-                            </div>
-                        ))}
-                        {isAddingUser ? (
-                            <div className="flex items-center gap-2 animate-fade-in">
-                                <input 
-                                    type="text" 
-                                    value={newUserName} 
-                                    onChange={e => setNewUserName(e.target.value)} 
-                                    className="input-cute py-1 px-3 mb-0 w-24 text-sm" 
-                                    placeholder="名字" 
-                                    autoFocus 
-                                    onKeyDown={e => e.key === 'Enter' && handleAddUser()}
-                                />
-                                <button onClick={handleAddUser} disabled={isSaving} className="btn-pill btn-warning px-3 py-1 text-xs shadow-md">{isSaving ? '...' : '加入'}</button>
-                                <button onClick={() => setIsAddingUser(false)} className="bg-gray-100 rounded-full w-6 h-6 flex items-center justify-center"><Icon name="X" size={12}/></button>
-                            </div>
-                        ) : (
-                            <button onClick={() => setIsAddingUser(true)} className="w-8 h-8 rounded-full bg-white border-2 border-dashed border-gray-300 text-gray-400 flex items-center justify-center hover:border-[var(--accent-yellow)] hover:text-[var(--accent-yellow)]"><Icon name="Plus" size={16}/></button>
-                        )}
+                        {users.map(u => (<div key={u} className="bg-white px-3 py-1.5 rounded-full text-sm font-bold text-gray-600 border border-gray-200 shadow-sm flex items-center gap-1"><div className="w-5 h-5 rounded-full bg-[var(--accent-blue)] text-white flex items-center justify-center text-[10px]">{u[0]}</div>{u}<button onClick={() => { if(users.length <= 1) return alert("至少保留一位成員"); setUserToDelete(u); }} className="ml-1 text-gray-300 hover:text-red-400"><Icon name="X" size={12}/></button></div>))}
+                        {isAddingUser ? (<div className="flex items-center gap-2 animate-fade-in"><input type="text" value={newUserName} onChange={e => setNewUserName(e.target.value)} className="input-cute py-1 px-3 mb-0 w-24 text-sm" placeholder="名字" autoFocus onKeyDown={e => e.key === 'Enter' && handleAddUser()}/><button onClick={handleAddUser} disabled={isSaving} className="btn-pill btn-warning px-3 py-1 text-xs shadow-md">{isSaving ? '...' : '加入'}</button><button onClick={() => setIsAddingUser(false)} className="bg-gray-100 rounded-full w-6 h-6 flex items-center justify-center"><Icon name="X" size={12}/></button></div>) : (<button onClick={() => setIsAddingUser(true)} className="w-8 h-8 rounded-full bg-white border-2 border-dashed border-gray-300 text-gray-400 flex items-center justify-center hover:border-[var(--accent-yellow)] hover:text-[var(--accent-yellow)]"><Icon name="Plus" size={16}/></button>)}
                     </div>
-
-                    {/* Summary */}
                     <div className="card-cute p-6 mb-6 bg-gradient-to-br from-white to-[#FFFCF5]">
-                        <div className="flex justify-between items-end mb-4">
-                            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Total Spent</h2>
-                            <span className="text-3xl font-black font-mono text-[var(--accent-yellow)]">¥{debtSummary.totalSpent.toLocaleString()}</span>
-                        </div>
+                        <div className="flex justify-between items-end mb-4"><h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Total Spent</h2><span className="text-3xl font-black font-mono text-[var(--accent-yellow)]">¥{debtSummary.totalSpent.toLocaleString()}</span></div>
                         <div className="border-t-2 border-dashed border-gray-100 my-4"></div>
-                        <div className="space-y-3">
-                            {debtSummary.debts.length === 0 ? <div className="text-center text-gray-400 text-sm font-bold">目前沒有欠款 ✨</div> : debtSummary.debts.map((d, idx) => (
-                                <div key={idx} className="flex justify-between items-center bg-[#F7FAFC] p-3 rounded-xl">
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-bold text-gray-600">{d.from}</span>
-                                        <Icon name="ArrowRight" size={14} className="text-gray-300"/>
-                                        <span className="font-bold text-gray-600">{d.to}</span>
-                                    </div>
-                                    <span className="font-mono font-bold text-[var(--text-main)]">¥{d.amount.toLocaleString()}</span>
-                                </div>
-                            ))}
-                        </div>
+                        <div className="space-y-3">{debtSummary.debts.length === 0 ? <div className="text-center text-gray-400 text-sm font-bold">目前沒有欠款 ✨</div> : debtSummary.debts.map((d, idx) => (<div key={idx} className="flex justify-between items-center bg-[#F7FAFC] p-3 rounded-xl"><div className="flex items-center gap-2"><span className="font-bold text-gray-600">{d.from}</span><Icon name="ArrowRight" size={14} className="text-gray-300"/><span className="font-bold text-gray-600">{d.to}</span></div><span className="font-mono font-bold text-[var(--text-main)]">¥{d.amount.toLocaleString()}</span></div>))}</div>
                     </div>
-
-                    {/* Add Expense Form (Improved) */}
                     <div className="card-cute p-5 mb-6 relative z-10 border-l-4 border-l-[var(--accent-pink)]">
                         <h3 className="text-sm font-black text-gray-400 mb-3 uppercase tracking-wider">New Expense</h3>
-                        <div className="space-y-3">
-                            <input type="text" placeholder="項目 (例: 居酒屋)" value={newExp.title} onChange={e => setNewExp({...newExp, title: e.target.value})} className="input-cute" />
-                            <div className="flex gap-2">
-                                <input type="number" placeholder="¥ 金額" value={newExp.amount} onChange={e => setNewExp({...newExp, amount: e.target.value})} className="input-cute flex-1" />
-                                <div className="relative w-1/3">
-                                    <select value={newExp.payer} onChange={e => setNewExp({...newExp, payer: e.target.value})} className="input-cute h-full appearance-none pr-8">
-                                        {users.map(u => <option key={u} value={u}>{u} 先付</option>)}
-                                    </select>
-                                    <Icon name="ChevronDown" size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"/>
-                                </div>
-                            </div>
-                            
-                            {/* Split Selector */}
-                            <div className="bg-[#F7FAFC] p-3 rounded-xl">
-                                <div className="text-xs font-bold text-gray-400 mb-2">誰要分攤？(點擊切換)</div>
-                                <div className="flex flex-wrap gap-2">
-                                    {users.map(u => {
-                                        const isSelected = involvedUsers.includes(u);
-                                        return (
-                                            <button 
-                                                key={u} 
-                                                onClick={() => toggleInvolved(u)}
-                                                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border-2 ${isSelected ? 'bg-[var(--accent-blue)] text-white border-[var(--accent-blue)]' : 'bg-white text-gray-400 border-gray-200'}`}
-                                            >
-                                                {u}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            <button onClick={handleAddExpense} disabled={isSaving || !newExp.title || !newExp.amount} className="w-full btn-pill btn-primary py-3 shadow-lg flex justify-center items-center gap-2 mt-2">
-                                {isSaving ? <div className="spinner"></div> : <><Icon name="PlusCircle" size={18}/> 記上一筆</>}
-                            </button>
-                        </div>
+                        <div className="space-y-3"><input type="text" placeholder="項目 (例: 居酒屋)" value={newExp.title} onChange={e => setNewExp({...newExp, title: e.target.value})} className="input-cute" /><div className="flex gap-2"><input type="number" placeholder="¥ 金額" value={newExp.amount} onChange={e => setNewExp({...newExp, amount: e.target.value})} className="input-cute flex-1" /><div className="relative w-1/3"><select value={newExp.payer} onChange={e => setNewExp({...newExp, payer: e.target.value})} className="input-cute h-full appearance-none pr-8">{users.map(u => <option key={u} value={u}>{u} 先付</option>)}</select><Icon name="ChevronDown" size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"/></div></div><div className="bg-[#F7FAFC] p-3 rounded-xl"><div className="text-xs font-bold text-gray-400 mb-2">誰要分攤？(點擊切換)</div><div className="flex flex-wrap gap-2">{users.map(u => { const isSelected = involvedUsers.includes(u); return (<button key={u} onClick={() => toggleInvolved(u)} className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border-2 ${isSelected ? 'bg-[var(--accent-blue)] text-white border-[var(--accent-blue)]' : 'bg-white text-gray-400 border-gray-200'}`}>{u}</button>); })}</div></div><button onClick={handleAddExpense} disabled={isSaving || !newExp.title || !newExp.amount} className="w-full btn-pill btn-primary py-3 shadow-lg flex justify-center items-center gap-2 mt-2">{isSaving ? <div className="spinner"></div> : <><Icon name="PlusCircle" size={18}/> 記上一筆</>}</button></div>
                     </div>
-
-                    {/* Expense List */}
-                    <div className="space-y-3 pb-24 relative z-10">
-                        {expenses.slice().reverse().map((exp, idx) => (
-                            <div key={exp.id} className="bg-white/90 p-4 rounded-2xl shadow-sm flex justify-between items-center stagger-item border border-gray-50">
-                                <div>
-                                    <div className="font-bold text-[var(--text-main)]">{exp.title}</div>
-                                    <div className="text-xs text-gray-400 font-bold flex items-center gap-1 mt-1">
-                                        <Icon name="User" size={10} /> 
-                                        {exp.payer} 付款 
-                                        <Icon name="ArrowRight" size={10} className="ml-1"/> 
-                                        {exp.involved && exp.involved.length < users.length ? `${exp.involved.length} 人分` : '全員'}
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <div className="font-mono font-bold text-lg text-[var(--accent-yellow)]">¥{exp.amount.toLocaleString()}</div>
-                                    <button onClick={() => setDeleteTarget(exp.id)} className="text-gray-200 hover:text-[var(--accent-pink)]"><Icon name="Trash2" size={16}/></button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    <ConfirmModal 
-                        isOpen={!!deleteTarget} 
-                        title="刪除款項？" 
-                        onConfirm={confirmDeleteExpense} 
-                        onCancel={() => setDeleteTarget(null)} 
-                        isLoading={isSaving}
-                    />
-                    <ConfirmModal 
-                        isOpen={!!userToDelete} 
-                        title={`移除 ${userToDelete}？`}
-                        message="注意：這不會自動清除他已付的款項紀錄，請確認帳務已結清。"
-                        onConfirm={confirmDeleteUser} 
-                        onCancel={() => setUserToDelete(null)} 
-                        isLoading={isSaving}
-                    />
+                    <div className="space-y-3 pb-24 relative z-10">{expenses.slice().reverse().map((exp, idx) => (<div key={exp.id} className="bg-white/90 p-4 rounded-2xl shadow-sm flex justify-between items-center stagger-item border border-gray-50"><div><div className="font-bold text-[var(--text-main)]">{exp.title}</div><div className="text-xs text-gray-400 font-bold flex items-center gap-1 mt-1"><Icon name="User" size={10} /> {exp.payer} 付款 <Icon name="ArrowRight" size={10} className="ml-1"/> {exp.involved && exp.involved.length < users.length ? `${exp.involved.length} 人分` : '全員'}</div></div><div className="flex items-center gap-3"><div className="font-mono font-bold text-lg text-[var(--accent-yellow)]">¥{exp.amount.toLocaleString()}</div><button onClick={() => setDeleteTarget(exp.id)} className="text-gray-200 hover:text-[var(--accent-pink)]"><Icon name="Trash2" size={16}/></button></div></div>))}</div>
+                    <ConfirmModal isOpen={!!deleteTarget} title="刪除款項？" onConfirm={confirmDeleteExpense} onCancel={() => setDeleteTarget(null)} isLoading={isSaving} />
+                    <ConfirmModal isOpen={!!userToDelete} title={`移除 ${userToDelete}？`} message="注意：這不會自動清除他已付的款項紀錄，請確認帳務已結清。" onConfirm={confirmDeleteUser} onCancel={() => setUserToDelete(null)} isLoading={isSaving} />
                 </div>
             );
         };
 
+        // ... GuideView (Same logic, simple render) ...
         const GuideView = ({ guides, setGuides, showToast }) => {
             const [isAdding, setIsAdding] = useState(false);
             const [newGuide, setNewGuide] = useState({ title: '', content: '', type: 'transport' });
             const [deleteTarget, setDeleteTarget] = useState(null);
             const [isSaving, setIsSaving] = useState(false);
-
-            const typeMap = { 
-                transport: { icon: 'TrainFront', color: 'text-blue-500', bg: 'bg-blue-100', label: '交通' }, 
-                ticket: { icon: 'Ticket', color: 'text-green-500', bg: 'bg-green-100', label: '票券' }, 
-                spot: { icon: 'MapPin', color: 'text-red-500', bg: 'bg-red-100', label: '景點' }, 
-                shopping: { icon: 'ShoppingBag', color: 'text-orange-500', bg: 'bg-orange-100', label: '購物' } 
-            };
-
-            const handleAdd = async () => { 
-                if (!newGuide.title) return; 
-                setIsSaving(true);
-                await setGuides([...guides, { ...newGuide, id: Date.now() }]); 
-                setIsSaving(false);
-                setIsAdding(false); 
-                setNewGuide({ title: '', content: '', type: 'transport' }); 
-                showToast("攻略已新增"); 
-            };
-            
-            const confirmDelete = async () => {
-                if (deleteTarget) {
-                    setIsSaving(true);
-                    await setGuides(guides.filter(g => g.id !== deleteTarget));
-                    setIsSaving(false);
-                    showToast("已刪除");
-                    setDeleteTarget(null);
-                }
-            };
-
+            const typeMap = { transport: { icon: 'TrainFront', color: 'text-blue-500', bg: 'bg-blue-100', label: '交通' }, ticket: { icon: 'Ticket', color: 'text-green-500', bg: 'bg-green-100', label: '票券' }, spot: { icon: 'MapPin', color: 'text-red-500', bg: 'bg-red-100', label: '景點' }, shopping: { icon: 'ShoppingBag', color: 'text-orange-500', bg: 'bg-orange-100', label: '購物' } };
+            const handleAdd = async () => { if (!newGuide.title) return; setIsSaving(true); await setGuides([...guides, { ...newGuide, id: Date.now() }]); setIsSaving(false); setIsAdding(false); setNewGuide({ title: '', content: '', type: 'transport' }); showToast("攻略已新增"); };
+            const confirmDelete = async () => { if (deleteTarget) { setIsSaving(true); await setGuides(guides.filter(g => g.id !== deleteTarget)); setIsSaving(false); showToast("已刪除"); setDeleteTarget(null); } };
             return (
                 <div className="p-5 h-full relative z-10 animate-fade-in scroll-container page-enter">
                     <BackgroundStickers />
@@ -972,29 +844,11 @@
                          <button onClick={() => setIsAdding(true)} className="w-10 h-10 rounded-full bg-[var(--accent-blue)] text-white shadow-lg flex items-center justify-center active:scale-90 transition-transform"><Icon name="Plus" size={20} strokeWidth={3}/></button>
                     </header>
                     <div className="space-y-4 pb-20 relative z-10">
-                        {guides.map((g, i) => {
-                             const style = typeMap[g.type] || typeMap['transport'];
-                             return (
-                                <div key={g.id} className="card-cute p-5 stagger-item relative group" style={{animationDelay: `${i*0.05}s`}}>
-                                    <div className="flex items-center gap-3 mb-3">
-                                        <div className={`w-10 h-10 rounded-full ${style.bg} ${style.color} flex items-center justify-center shrink-0`}><Icon name={style.icon} size={20} /></div>
-                                        <h3 className="text-lg font-bold text-[var(--text-main)] leading-tight">{g.title}</h3>
-                                        <button onClick={() => setDeleteTarget(g.id)} className="ml-auto text-gray-200 hover:text-red-400"><Icon name="Trash2" size={16} /></button>
-                                    </div>
-                                    <div className="pl-[52px]">
-                                        <ul className="space-y-2">
-                                            {g.content.split('\n').map((line, idx) => (
-                                                <li key={idx} className="text-sm text-gray-600 leading-relaxed font-medium relative pl-3 before:content-['•'] before:absolute before:left-0 before:text-gray-300">{line}</li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                </div>
-                             );
-                        })}
+                        {guides.map((g, i) => { const style = typeMap[g.type] || typeMap['transport']; return ( <div key={g.id} className="card-cute p-5 stagger-item relative group" style={{animationDelay: `${i*0.05}s`}}> <div className="flex items-center gap-3 mb-3"> <div className={`w-10 h-10 rounded-full ${style.bg} ${style.color} flex items-center justify-center shrink-0`}><Icon name={style.icon} size={20} /></div> <h3 className="text-lg font-bold text-[var(--text-main)] leading-tight">{g.title}</h3> <button onClick={() => setDeleteTarget(g.id)} className="ml-auto text-gray-200 hover:text-red-400"><Icon name="Trash2" size={16} /></button> </div> <div className="pl-[52px]"> <ul className="space-y-2"> {g.content.split('\n').map((line, idx) => ( <li key={idx} className="text-sm text-gray-600 leading-relaxed font-medium relative pl-3 before:content-['•'] before:absolute before:left-0 before:text-gray-300">{line}</li> ))} </ul> </div> </div> ); })}
                     </div>
                     {isAdding && (
                         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-modal" onClick={() => { if(!isSaving) setIsAdding(false); }}>
-                            <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl relative border-4 border-[#F0E6DD]" onClick={e => e.stopPropagation()}>
+                            <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl overflow-y-auto max-h-[85vh] relative border-4 border-[#F0E6DD]" onClick={e => e.stopPropagation()}>
                                 <h3 className="text-xl font-black mb-4 text-[var(--text-main)]">新增筆記</h3>
                                 <div className="space-y-4">
                                     <input type="text" placeholder="標題" value={newGuide.title} onChange={e => setNewGuide({...newGuide, title: e.target.value})} className="input-cute" />
@@ -1003,277 +857,80 @@
                                     </div>
                                     <textarea placeholder="內容" value={newGuide.content} onChange={e => setNewGuide({...newGuide, content: e.target.value})} className="input-cute h-32 resize-none"></textarea>
                                 </div>
-                                <div className="flex gap-3 mt-6">
-                                    <button onClick={() => setIsAdding(false)} disabled={isSaving} className="flex-1 py-3 text-gray-500 font-bold bg-gray-100 rounded-2xl btn-pill">取消</button>
-                                    <button onClick={handleAdd} disabled={isSaving} className="flex-1 py-3 btn-success btn-pill font-bold shadow-lg">
-                                        {isSaving ? <div className="spinner"></div> : '儲存'}
-                                    </button>
-                                </div>
+                                <div className="flex gap-3 mt-6"><button onClick={() => setIsAdding(false)} disabled={isSaving} className="flex-1 py-3 text-gray-500 font-bold bg-gray-100 rounded-2xl btn-pill">取消</button><button onClick={handleAdd} disabled={isSaving} className="flex-1 py-3 btn-success btn-pill font-bold shadow-lg">{isSaving ? <div className="spinner"></div> : '儲存'}</button></div>
                             </div>
                         </div>
                     )}
-                    
-                    <ConfirmModal 
-                        isOpen={!!deleteTarget} 
-                        title="刪除攻略？" 
-                        onConfirm={confirmDelete} 
-                        onCancel={() => setDeleteTarget(null)} 
-                        isLoading={isSaving}
-                    />
+                    <ConfirmModal isOpen={!!deleteTarget} title="刪除攻略？" onConfirm={confirmDelete} onCancel={() => setDeleteTarget(null)} isLoading={isSaving} />
                 </div>
             );
         }
 
-        const ShoppingView = ({ shopping, setShopping, showToast }) => {
-            const [isAdding, setIsAdding] = useState(false);
-            const [newItem, setNewItem] = useState({ name: '', price: '', note: '', image: '' });
-            const [deleteTarget, setDeleteTarget] = useState(null);
-            const [isSaving, setIsSaving] = useState(false);
-
-            const handleAdd = async () => {
-                if (!newItem.name) return;
-                setIsSaving(true);
-                await setShopping([...shopping, { ...newItem, id: Date.now(), bought: false }]);
-                setIsSaving(false);
-                setIsAdding(false);
-                setNewItem({ name: '', price: '', note: '', image: '' });
-                showToast("商品已新增");
-            };
-
-            const toggleBought = async (item) => {
-                const updated = shopping.map(i => i.id === item.id ? { ...i, bought: !i.bought } : i);
-                setShopping(updated); 
-            };
-
-            const confirmDelete = async () => {
-                if (deleteTarget) {
-                    setIsSaving(true);
-                    await setShopping(shopping.filter(i => i.id !== deleteTarget));
-                    setIsSaving(false);
-                    showToast("已刪除");
-                    setDeleteTarget(null);
-                }
-            };
-
-            const handleSearchImage = (name) => {
-                if(!name || !name.trim()) {
-                    showToast("請先輸入商品名稱喔 😅");
-                    return;
-                }
-                const url = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(name)}`;
-                const win = window.open(url, '_blank');
-                if (!win) {
-                    showToast("開啟失敗，請允許彈跳視窗 ⚠️");
-                }
-            }
-            
-            // Calculate Total Estimated Cost
-            const totalEstimated = shopping.reduce((acc, item) => acc + (parseFloat(item.price) || 0), 0);
-
-            return (
-                <div className="p-5 h-full relative z-10 animate-fade-in scroll-container page-enter">
-                    <BackgroundStickers />
-                    <header className="mb-6 flex justify-between items-center relative z-20">
-                         <div>
-                             <h1 className="text-3xl font-black text-[var(--text-main)] flex items-center gap-2">購物清單 <span className="text-2xl">🛍️</span></h1>
-                             <div className="text-xs font-bold text-[var(--accent-purple)] mt-1 ml-1">預算總計: ¥{totalEstimated.toLocaleString()}</div>
-                         </div>
-                         <button onClick={() => setIsAdding(true)} className="w-10 h-10 rounded-full bg-[var(--accent-purple)] text-white shadow-lg flex items-center justify-center active:scale-90 transition-transform"><Icon name="Plus" size={20} strokeWidth={3}/></button>
-                    </header>
-
-                    <div className="grid grid-cols-2 gap-4 pb-24 relative z-10">
-                        {shopping.map((item, i) => (
-                            <div key={item.id} className="card-polaroid stagger-item relative" style={{animationDelay: `${i*0.05}s`}}>
-                                <div className="absolute top-2 right-2 z-20 flex gap-1">
-                                    <button onClick={() => setDeleteTarget(item.id)} className="w-6 h-6 bg-white/80 rounded-full flex items-center justify-center text-red-400 shadow-sm"><Icon name="Trash2" size={12} /></button>
-                                </div>
-                                <div className="polaroid-img overflow-hidden relative">
-                                    {item.image ? (
-                                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://via.placeholder.com/150?text=No+Image'} />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-gray-300 bg-gray-100"><Icon name="Image" size={32}/></div>
-                                    )}
-                                    {item.bought && (
-                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                                            <div className="bg-[var(--accent-green)] text-white px-3 py-1 rounded-full text-xs font-bold transform -rotate-12 border-2 border-white shadow-lg">BOUGHT!</div>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="text-center">
-                                    <h4 className="font-bold text-[var(--text-main)] truncate text-sm">{item.name}</h4>
-                                    <div className="text-xs text-gray-400 font-mono mt-1">¥{item.price || '-'}</div>
-                                    <button onClick={() => toggleBought(item)} className={`mt-2 w-full py-1.5 rounded-md text-xs font-bold transition-colors ${item.bought ? 'bg-gray-100 text-gray-400' : 'bg-[var(--accent-purple)] text-white'}`}>
-                                        {item.bought ? '已購買' : '標示購買'}
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                        {shopping.length === 0 && (
-                            <div className="col-span-2 text-center py-20 opacity-40">
-                                <div className="text-5xl mb-3 grayscale">🛒</div>
-                                <div className="font-bold text-sm">還沒想買的東西嗎？</div>
-                            </div>
-                        )}
-                    </div>
-
-                    {isAdding && (
-                        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-modal" onClick={() => { if(!isSaving) setIsAdding(false); }}>
-                            <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl relative border-4 border-[#F0E6DD]" onClick={e => e.stopPropagation()}>
-                                <h3 className="text-xl font-black mb-4 text-[var(--text-main)]">新增想買的東西</h3>
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="text-xs font-bold text-gray-400 ml-1">商品名稱</label>
-                                        <input type="text" value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})} className="input-cute" placeholder="例: Uniqlo 發熱衣" />
-                                    </div>
-                                    <div>
-                                        <label className="text-xs font-bold text-gray-400 ml-1">預估價格 (¥)</label>
-                                        <input type="number" value={newItem.price} onChange={e => setNewItem({...newItem, price: e.target.value})} className="input-cute" placeholder="1000" />
-                                    </div>
-                                    <div>
-                                        <label className="text-xs font-bold text-gray-400 ml-1 flex justify-between items-center">
-                                            <span>圖片網址</span>
-                                            <span onClick={() => handleSearchImage(newItem.name)} className="text-[var(--accent-blue)] cursor-pointer hover:underline flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-md transition-colors hover:bg-blue-100">
-                                                <Icon name="Search" size={12}/> 去 Google 找圖
-                                            </span>
-                                        </label>
-                                        <div className="flex gap-2">
-                                            <input type="text" value={newItem.image} onChange={e => setNewItem({...newItem, image: e.target.value})} className="input-cute" placeholder="貼上圖片連結..." />
-                                        </div>
-                                        {newItem.image && <div className="h-20 w-20 rounded-lg overflow-hidden border-2 border-gray-100 mt-2"><img src={newItem.image} className="w-full h-full object-cover" onError={(e) => e.target.style.display='none'}/></div>}
-                                    </div>
-                                </div>
-                                <div className="flex gap-3 mt-6">
-                                    <button onClick={() => setIsAdding(false)} disabled={isSaving} className="flex-1 py-3 text-gray-500 font-bold bg-gray-100 rounded-2xl btn-pill">取消</button>
-                                    <button onClick={handleAdd} disabled={isSaving} className="flex-1 py-3 btn-purple btn-pill font-bold shadow-lg">
-                                        {isSaving ? <div className="spinner"></div> : '加入清單'}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    <ConfirmModal 
-                        isOpen={!!deleteTarget} 
-                        title="刪除商品？" 
-                        onConfirm={confirmDelete} 
-                        onCancel={() => setDeleteTarget(null)} 
-                        isLoading={isSaving}
-                    />
-                </div>
-            );
-        };
-
-        const TabBar = ({ activeTab, setActiveTab }) => {
-            const tabs = [
-                { id: 'itinerary', label: '行程', icon: 'Calendar', color: 'text-[var(--accent-green)]' },
-                { id: 'guide', label: '攻略', icon: 'BookOpen', color: 'text-[var(--accent-pink)]' },
-                { id: 'shopping', label: '購物', icon: 'ShoppingBag', color: 'text-[var(--accent-purple)]' },
-                { id: 'expenses', label: '分帳', icon: 'Wallet', color: 'text-[var(--accent-yellow)]' },
-            ];
-            return (
-                <div className="tab-bar-glass pb-safe-bottom pt-3 px-2 flex justify-around z-50">
-                    {tabs.map(tab => (
-                        <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex flex-col items-center w-16 transition-all duration-300 active:scale-90 ${activeTab === tab.id ? '-translate-y-2' : 'opacity-40 hover:opacity-60'}`}>
-                            <div className={`p-2.5 rounded-2xl transition-all duration-300 ${activeTab === tab.id ? 'bg-white shadow-md rotate-3' : 'bg-transparent'}`}>
-                                <Icon name={tab.icon} size={24} className={activeTab === tab.id ? tab.color : "text-gray-500"} strokeWidth={activeTab === tab.id ? 3 : 2.5} />
-                            </div>
-                            <span className={`text-[10px] mt-1 font-bold tracking-wide ${activeTab === tab.id ? 'text-[var(--text-main)]' : 'text-gray-400'}`}>{tab.label}</span>
-                        </button>
-                    ))}
-                </div>
-            );
-        };
-
         const App = () => {
+            // State for the entered trip ID (gatekeeper)
+            const [tripId, setTripId] = useState('');
+            const [entered, setEntered] = useState(false);
+
+            // App States
             const [activeTab, setActiveTab] = useState('itinerary');
-            
-            // 🆕 Initialize Trip ID from LocalStorage or Default
-            const [tripId, setTripId] = useState(() => {
-                return window.localStorage.getItem('current_trip_id') || 'trip_2026_demo';
-            });
-
-            // Save Trip ID changes
-            useEffect(() => {
-                window.localStorage.setItem('current_trip_id', tripId);
-            }, [tripId]);
-
-            // Settings and Data Hooks (Dynamic ID)
-            const [settings, setSettings, syncingSettings, settingsLoaded] = useFirebaseSync('trips', 'settings', defaultSettings, tripId);
-            const [itineraryItems, setItineraryItems, syncingItinerary, itemsLoaded] = useFirebaseSync('trips', 'itinerary', defaultItinerary, tripId);
-            const [expenses, setExpenses, syncingExpenses, expensesLoaded] = useFirebaseSync('trips', 'expenses', defaultExpenses, tripId);
-            const [users, setUsers, syncingUsers, usersLoaded] = useFirebaseSync('trips', 'users', defaultUsers, tripId);
-            const [guides, setGuides, syncingGuides, guidesLoaded] = useFirebaseSync('trips', 'guides', defaultGuides, tripId);
-            const [shopping, setShopping, syncingShopping, shoppingLoaded] = useFirebaseSync('trips', 'shopping', defaultShopping, tripId);
-            
             const [showSettings, setShowSettings] = useState(false);
             const [toast, setToast] = useState({ msg: '', visible: false });
 
-            const isAllLoaded = settingsLoaded && itemsLoaded && expensesLoaded && usersLoaded && guidesLoaded && shoppingLoaded;
+            // Data Hooks (Initialize with null tripId until entered)
+            const activeTripId = entered ? tripId : null;
+            
+            const [settings, setSettings, syncingSettings] = useFirebaseSync('trips', 'settings', defaultSettings, activeTripId);
+            const [itineraryItems, setItineraryItems, syncingItinerary] = useFirebaseSync('trips', 'itinerary', defaultItinerary, activeTripId);
+            const [expenses, setExpenses, syncingExpenses] = useFirebaseSync('trips', 'expenses', defaultExpenses, activeTripId);
+            const [users, setUsers, syncingUsers] = useFirebaseSync('trips', 'users', defaultUsers, activeTripId);
+            const [guides, setGuides, syncingGuides] = useFirebaseSync('trips', 'guides', defaultGuides, activeTripId);
+            const [shopping, setShopping, syncingShopping] = useFirebaseSync('trips', 'shopping', defaultShopping, activeTripId);
 
             const showToast = (msg) => { setToast({ msg, visible: true }); setTimeout(() => setToast({ msg: '', visible: false }), 2000); };
 
+            const handleJoinTrip = (id) => {
+                setTripId(id);
+                window.localStorage.setItem('current_trip_id', id);
+                setEntered(true);
+            };
+
+            const handleChangeTrip = () => {
+                setEntered(false);
+                setTripId('');
+                setShowSettings(false);
+                // Clear any data from view temporarily
+            };
+
             const handleReset = async () => {
                 if(confirm(`確定重置 ID: ${tripId} 的所有資料？此操作無法復原。`)) {
-                    await setItineraryItems([]);
-                    await setExpenses([]);
-                    await setUsers(['我', '旅伴A']);
-                    await setGuides([]);
-                    await setShopping([]);
-                    // Reset Settings to Default but keep the ID context
-                    await setSettings(defaultSettings);
-                    setShowSettings(false);
-                    showToast("資料已重置");
+                    await setItineraryItems([]); await setExpenses([]); await setUsers(['我', '旅伴A']); await setGuides([]); await setShopping([]); await setSettings(defaultSettings);
+                    setShowSettings(false); showToast("資料已重置");
                 }
             };
 
-            // Splash Screen Logic
-            const [showSplash, setShowSplash] = useState(true);
-            useEffect(() => {
-                if (isAllLoaded) {
-                    const timer = setTimeout(() => setShowSplash(false), 800); // Minimal splash time for visual effect
-                    return () => clearTimeout(timer);
-                }
-            }, [isAllLoaded]);
+            if (!entered) {
+                return <LandingView onJoin={handleJoinTrip} />;
+            }
 
             const renderContent = () => {
                 switch(activeTab) {
-                    case 'itinerary': 
-                        return <ItineraryView items={itineraryItems} setItems={setItineraryItems} settings={settings} openSettings={() => setShowSettings(true)} showToast={showToast} isSyncing={syncingItinerary} />;
-                    case 'guide': 
-                        return <GuideView guides={guides} setGuides={setGuides} showToast={showToast} />;
-                    case 'shopping':
-                        return <ShoppingView shopping={shopping} setShopping={setShopping} showToast={showToast} />;
-                    case 'expenses': 
-                        return <ExpenseView expenses={expenses} setExpenses={setExpenses} users={users} setUsers={setUsers} showToast={showToast} />;
-                    default: 
-                        return <ItineraryView items={itineraryItems} setItems={setItineraryItems} settings={settings} openSettings={() => setShowSettings(true)} showToast={showToast} />;
+                    case 'itinerary': return <ItineraryView items={itineraryItems} setItems={setItineraryItems} settings={settings} openSettings={() => setShowSettings(true)} showToast={showToast} isSyncing={syncingItinerary} />;
+                    case 'guide': return <GuideView guides={guides} setGuides={setGuides} showToast={showToast} />;
+                    case 'shopping': return <ShoppingView shopping={shopping} setShopping={setShopping} showToast={showToast} />;
+                    case 'expenses': return <ExpenseView expenses={expenses} setExpenses={setExpenses} users={users} setUsers={setUsers} showToast={showToast} />;
+                    default: return <ItineraryView items={itineraryItems} setItems={setItineraryItems} settings={settings} openSettings={() => setShowSettings(true)} showToast={showToast} />;
                 }
             };
 
             return (
                 <div id="app-container">
-                    <SplashScreen visible={showSplash} />
-                    {!showSplash && (
-                        <>
-                            {(syncingSettings || syncingItinerary || syncingExpenses || syncingShopping) && <div className="fixed top-3 right-3 w-3 h-3 bg-[var(--accent-green)] rounded-full animate-ping z-[200]"></div>}
-                            <div key={activeTab} style={{height: '100%', width: '100%', position: 'absolute', top: 0, left: 0}}>
-                                {renderContent()}
-                            </div>
-                            <TabBar activeTab={activeTab} setActiveTab={setActiveTab} />
-                            <Toast message={toast.msg} visible={toast.visible} />
-                            
-                            {/* Settings Modal */}
-                            <SettingsModal 
-                                isOpen={showSettings} 
-                                onClose={() => setShowSettings(false)}
-                                settings={settings}
-                                updateSettings={setSettings}
-                                tripId={tripId}
-                                setTripId={setTripId}
-                                onReset={handleReset}
-                            />
-                        </>
-                    )}
+                    {(syncingSettings || syncingItinerary || syncingExpenses || syncingShopping) && <div className="fixed top-3 right-3 w-3 h-3 bg-[var(--accent-green)] rounded-full animate-ping z-[200]"></div>}
+                    <div key={activeTab} style={{height: '100%', width: '100%', position: 'absolute', top: 0, left: 0}}>
+                        {renderContent()}
+                    </div>
+                    <TabBar activeTab={activeTab} setActiveTab={setActiveTab} />
+                    <Toast message={toast.msg} visible={toast.visible} />
+                    <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} settings={settings} updateSettings={setSettings} tripId={tripId} onReset={handleReset} onChangeTrip={handleChangeTrip} />
                 </div>
             );
         };
