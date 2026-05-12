@@ -12,11 +12,13 @@ import { FoodChapter } from './chapters/FoodChapter';
 import { ShoppingChapter } from './chapters/ShoppingChapter';
 import { AlbumChapter } from './chapters/AlbumChapter';
 import { ExpenseChapter } from './chapters/ExpenseChapter';
+import { NotesChapter } from './chapters/NotesChapter';
+import { MemoryChapter } from './chapters/MemoryChapter';
 import { PlaceholderChapter } from './chapters/PlaceholderChapter';
 import { useTripStore, getLastTripId } from './store/tripStore';
 import { useUIStore } from './store/uiStore';
 import { ensureAnonymousAuth } from './firebase';
-import { applyThemeVars, getTheme } from './themes';
+import { applyTheme } from './themes';
 import type { ChapterMeta } from './types';
 
 const useAutoLogin = () => {
@@ -40,6 +42,8 @@ const renderChapter = (chapter: ChapterMeta, pageNo: number) => {
         case 'shopping':  return <ShoppingChapter key={chapter.id} chapter={chapter} pageNo={pageNo} />;
         case 'album':     return <AlbumChapter key={chapter.id} chapter={chapter} pageNo={pageNo} />;
         case 'expense':   return <ExpenseChapter key={chapter.id} chapter={chapter} pageNo={pageNo} />;
+        case 'notes':     return <NotesChapter key={chapter.id} chapter={chapter} pageNo={pageNo} />;
+        case 'memory':    return <MemoryChapter key={chapter.id} chapter={chapter} pageNo={pageNo} />;
         default:          return <PlaceholderChapter key={chapter.id} chapter={chapter} pageNo={pageNo} />;
     }
 };
@@ -59,11 +63,10 @@ export const App = () => {
         if (last) enterTrip(last);
     }, [authReady, tripId, enterTrip]);
 
-    // Apply theme whenever it changes
+    // Apply theme whenever any field of theme config changes
     useEffect(() => {
-        const theme = getTheme(trip.theme.preset);
-        applyThemeVars(theme);
-    }, [trip.theme.preset]);
+        applyTheme(trip.theme);
+    }, [trip.theme]);
 
     // Ensure a valid current chapter
     const sortedChapters = [...trip.chapters].sort((a, b) => a.order - b.order);

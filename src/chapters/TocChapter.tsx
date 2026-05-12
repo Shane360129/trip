@@ -1,4 +1,21 @@
 import { ChevronRight, Eye, EyeOff, GripVertical } from 'lucide-react';
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+    useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { BookLayout } from '../components/BookLayout';
 import { useTripStore } from '../store/tripStore';
 import { useUIStore } from '../store/uiStore';
@@ -10,28 +27,113 @@ interface TocProps {
     pageNo: number;
 }
 
+const SortableRow = ({
+    chapter,
+    index,
+    editMode,
+    sortable,
+    onToggle,
+    onGo,
+}: {
+    chapter: ChapterMeta;
+    index: number;
+    editMode: boolean;
+    sortable: boolean;
+    onToggle: () => void;
+    onGo: () => void;
+}) => {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+        id: chapter.id,
+        disabled: !sortable,
+    });
+    const style: React.CSSProperties = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+    };
+    const spine = CHAPTER_SPINE_COLORS[chapter.type];
+
+    return (
+        <li ref={setNodeRef} style={style}>
+            <div
+                className="flex items-center gap-2 py-2 border-b border-dashed"
+                style={{ borderColor: 'var(--paper-edge)' }}
+            >
+                {editMode && sortable && (
+                    <button
+                        {...attributes}
+                        {...listeners}
+                        className="cursor-grab active:cursor-grabbing opacity-60 hover:opacity-100"
+                        aria-label="拖曳排序"
+                        style={{ color: 'var(--ink-soft)' }}
+                    >
+                        <GripVertical size={14} />
+                    </button>
+                )}
+                <span className="w-2 h-6 rounded-sm shrink-0" style={{ background: spine }} aria-hidden />
+                <span className="text-xl mr-1" aria-hidden>{CHAPTER_EMOJI[chapter.type]}</span>
+                <button
+                    onClick={onGo}
+                    className="flex-1 text-left flex items-center justify-between group"
+                >
+                    <div>
+                        <div className="font-display text-lg font-bold" style={{ color: 'var(--ink)' }}>
+                            {chapter.title}
+                        </div>
+                        <div className="text-[10px] tracking-[0.2em] font-bold" style={{ color: 'var(--ink-soft)' }}>
+                            {CHAPTER_HEADER_EN[chapter.type]}
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <span className="font-mono text-sm tabular-nums" style={{ color: 'var(--ink-soft)' }}>
+                            {String(index).padStart(2, '0')}
+                        </span>
+                        <ChevronRight size={16} style={{ color: 'var(--ink-soft)' }} className="group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+                </button>
+                {editMode && sortable && (
+                    <button
+                        onClick={onToggle}
+                        className="opacity-60 hover:opacity-100"
+                        style={{ color: 'var(--ink-soft)' }}
+                        aria-label={chapter.visible ? '隱藏章節' : '顯示章節'}
+                    >
+                        {chapter.visible ? <Eye size={14} /> : <EyeOff size={14} />}
+                    </button>
+                )}
+            </div>
+        </li>
+    );
+};
+
 export const TocChapter = ({ chapter, pageNo }: TocProps) => {
     const trip = useTripStore((s) => s.trip);
     const patch = useTripStore((s) => s.patch);
     const goToChapter = useUIStore((s) => s.goToChapter);
     const editMode = useUIStore((s) => s.editMode);
 
-    const sorted = [...trip.chapters].sort((a, b) => a.order - b.order);
-    const visibleEntries = sorted.filter((c) => c.visible && c.type !== 'cover' && c.type !== 'toc');
+    const sortedChapters = [...trip.chapters].sort((a, b) => a.order - b.order);
+    const visibleChapters = sortedChapters.filter((c) => c.visible && c.type !== 'cover' && c.type !== 'toc');
+    const rows = editMode ? sortedChapters : visibleChapters;
 
-    const toggleVisible = (id: string) => {
-        const next = trip.chapters.map((c) => (c.id === id ? { ...c, visible: !c.visible } : c));
-        patch({ chapters: next });
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    );
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (!over || active.id === over.id) return;
+        const list = [...sortedChapters];
+        const oldIndex = list.findIndex((c) => c.id === active.id);
+        const newIndex = list.findIndex((c) => c.id === over.id);
+        if (oldIndex < 0 || newIndex < 0) return;
+        const reordered = arrayMove(list, oldIndex, newIndex).map((c, i) => ({ ...c, order: i }));
+        patch({ chapters: reordered });
     };
 
-    const move = (idx: number, dir: -1 | 1) => {
-        const list = [...sorted];
-        const j = idx + dir;
-        if (j < 0 || j >= list.length) return;
-        const tmp = list[idx];
-        list[idx] = list[j];
-        list[j] = tmp;
-        patch({ chapters: list.map((c, i) => ({ ...c, order: i })) });
+    const toggleVisible = (id: string) => {
+        patch({ chapters: trip.chapters.map((c) => (c.id === id ? { ...c, visible: !c.visible } : c)) });
     };
 
     return (
@@ -52,67 +154,30 @@ export const TocChapter = ({ chapter, pageNo }: TocProps) => {
                     </p>
                 </header>
 
-                <ol className="space-y-1">
-                    {(editMode ? sorted : visibleEntries).map((c, i) => {
-                        const spine = CHAPTER_SPINE_COLORS[c.type];
-                        const isCoverOrToc = c.type === 'cover' || c.type === 'toc';
-                        return (
-                            <li key={c.id}>
-                                <div className="flex items-center gap-2 py-2 border-b border-dashed" style={{ borderColor: 'var(--paper-edge)' }}>
-                                    {editMode && !isCoverOrToc && (
-                                        <div className="flex flex-col items-center gap-0.5" style={{ color: 'var(--ink-soft)' }}>
-                                            <button onClick={() => move(sorted.findIndex((x) => x.id === c.id), -1)} aria-label="上移" className="opacity-60 hover:opacity-100">
-                                                <GripVertical size={14} />
-                                            </button>
-                                        </div>
-                                    )}
-                                    <span
-                                        className="w-2 h-6 rounded-sm"
-                                        style={{ background: spine }}
-                                        aria-hidden
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                    <SortableContext items={rows.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+                        <ol className="space-y-1">
+                            {rows.map((c, idx) => {
+                                const isFixed = c.type === 'cover' || c.type === 'toc';
+                                return (
+                                    <SortableRow
+                                        key={c.id}
+                                        chapter={c}
+                                        index={idx + 1}
+                                        editMode={editMode}
+                                        sortable={!isFixed}
+                                        onToggle={() => toggleVisible(c.id)}
+                                        onGo={() => goToChapter(c.id, 1)}
                                     />
-                                    <span className="text-xl mr-1" aria-hidden>{CHAPTER_EMOJI[c.type]}</span>
-                                    <button
-                                        onClick={() => goToChapter(c.id, 1)}
-                                        className="flex-1 text-left flex items-center justify-between group"
-                                    >
-                                        <div>
-                                            <div className="font-display text-lg font-bold" style={{ color: 'var(--ink)' }}>
-                                                {c.title}
-                                            </div>
-                                            <div className="text-[10px] tracking-[0.2em] font-bold" style={{ color: 'var(--ink-soft)' }}>
-                                                {CHAPTER_HEADER_EN[c.type]}
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <span className="font-mono text-sm tabular-nums" style={{ color: 'var(--ink-soft)' }}>
-                                                {String((editMode ? sorted : visibleEntries).indexOf(c) + (editMode ? 1 : 3)).padStart(2, '0')}
-                                            </span>
-                                            <ChevronRight size={16} style={{ color: 'var(--ink-soft)' }} className="group-hover:translate-x-0.5 transition-transform" />
-                                        </div>
-                                    </button>
-                                    {editMode && !isCoverOrToc && (
-                                        <button
-                                            onClick={() => toggleVisible(c.id)}
-                                            className="opacity-60 hover:opacity-100"
-                                            style={{ color: 'var(--ink-soft)' }}
-                                            aria-label={c.visible ? '隱藏章節' : '顯示章節'}
-                                        >
-                                            {c.visible ? <Eye size={14} /> : <EyeOff size={14} />}
-                                        </button>
-                                    )}
-                                </div>
-                                {!c.visible && editMode && <span className="text-[10px] ml-9" style={{ color: 'var(--ink-soft)' }}>· 已隱藏</span>}
-                                {/* prevent unused index */}
-                                <span className="sr-only">{i}</span>
-                            </li>
-                        );
-                    })}
-                </ol>
+                                );
+                            })}
+                        </ol>
+                    </SortableContext>
+                </DndContext>
 
                 {editMode && (
                     <p className="text-[11px] mt-4 leading-relaxed" style={{ color: 'var(--ink-soft)' }}>
-                        編輯模式：點箭頭排序、眼睛切換顯示。Phase 1 先支援這些；之後會加上拖曳重排。
+                        編輯模式：拖把手重排章節順序、眼睛切換顯示/隱藏。Cover 與 TOC 不可移動。
                     </p>
                 )}
             </div>

@@ -46,6 +46,12 @@ export interface ThemeConfig {
         washiTape: boolean;
         stamps: boolean;
     };
+    customColors?: {
+        accent?: string;
+        accent2?: string;
+        accent3?: string;
+        stamp?: string;
+    };
 }
 
 // --- Existing data (preserved verbatim from legacy app) ---
