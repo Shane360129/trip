@@ -2,26 +2,46 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <!-- SEO -->
+    <meta name="description" content="文青風格旅遊規劃 App：行程、攻略、購物清單、即時分帳，多人同步、離線可用。">
+    <meta property="og:title" content="Travel Log｜旅程從這裡開始">
+    <meta property="og:description" content="文青風格旅遊規劃 App：行程、攻略、購物清單、即時分帳。">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+
     <!-- PWA Settings -->
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Travel Log">
     <meta name="format-detection" content="telephone=no">
-    <meta name="theme-color" content="#FFFCF5">
-    
-    <title>Travel Planner (UI Fixes)</title>
-    
-    <!-- React & ReactDOM -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    
+    <meta name="theme-color" content="#FDFBF7">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9C%88%EF%B8%8F%3C/text%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23d4a373'/%3E%3Ctext x='50%25' y='62%25' font-size='62' text-anchor='middle' fill='white'%3E%E2%9C%88%EF%B8%8F%3C/text%3E%3C/svg%3E">
+
+    <title>Travel Log｜旅程從這裡開始</title>
+
+    <!-- Resource hints: warm up cross-origin connections -->
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- React & ReactDOM (production build) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
     <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
@@ -336,6 +356,12 @@
         }
         const db = firebase.firestore();
 
+        const newId = () => (
+            (typeof crypto !== 'undefined' && crypto.randomUUID)
+                ? crypto.randomUUID()
+                : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+        );
+
         const Icon = ({ name, size = 20, className, color = "currentColor", strokeWidth = 2.5 }) => {
             const iconData = lucide.icons[name];
             if (!iconData) return null;
@@ -554,7 +580,7 @@
             const handleAdd = async () => {
                 if (!newItem.title) return;
                 setIsSaving(true);
-                await setItems([...items, { ...newItem, id: Date.now(), day: selectedDay }]);
+                await setItems([...items, { ...newItem, id: newId(), day: selectedDay }]);
                 setIsSaving(false);
                 setIsAdding(false); 
                 setNewItem({ time: '', title: '', location: '', note: '' }); 
@@ -656,7 +682,7 @@
             const handleAdd = async () => {
                 if (!newItem.name) return;
                 setIsSaving(true);
-                await setShopping([...shopping, { ...newItem, id: Date.now(), bought: false }]);
+                await setShopping([...shopping, { ...newItem, id: newId(), bought: false }]);
                 setIsSaving(false); setIsAdding(false); setNewItem({ name: '', price: '', note: '', image: '' }); showToast("商品已新增");
             };
             const toggleBought = async (item) => { setShopping(shopping.map(i => i.id === item.id ? { ...i, bought: !i.bought } : i)); };
@@ -730,9 +756,19 @@
         };
 
         const SettingsModal = ({ isOpen, onClose, settings, updateSettings, tripId, onReset, onChangeTrip }) => {
-            if (!isOpen) return null;
             const [localSettings, setLocalSettings] = useState(settings);
-            
+
+            useEffect(() => { if (isOpen) setLocalSettings(settings); }, [isOpen, settings]);
+
+            useEffect(() => {
+                if (!isOpen) return;
+                const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+                window.addEventListener('keydown', onKey);
+                return () => window.removeEventListener('keydown', onKey);
+            }, [isOpen, onClose]);
+
+            if (!isOpen) return null;
+
             return (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150] flex items-center justify-center p-4 animate-modal" onClick={onClose}>
                     <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border-4 border-[#F0E6DD]" onClick={e => e.stopPropagation()}>
@@ -798,7 +834,7 @@
             const handleAddUser = async () => { if (newUserName.trim() && !users.includes(newUserName.trim())) { setIsSaving(true); await setUsers([...users, newUserName.trim()]); setNewUserName(''); setIsAddingUser(false); setIsSaving(false); showToast("成員已新增"); } };
             const confirmDeleteUser = async () => { if (userToDelete) { setIsSaving(true); await setUsers(users.filter(user => user !== userToDelete)); setIsSaving(false); showToast("成員已移除"); setUserToDelete(null); } };
             const toggleInvolved = (user) => { if (involvedUsers.includes(user)) { if (involvedUsers.length > 1) setInvolvedUsers(involvedUsers.filter(u => u !== user)); } else { setInvolvedUsers([...involvedUsers, user]); } };
-            const handleAddExpense = async () => { if (!newExp.title || !newExp.amount) return; setIsSaving(true); await setExpenses([...expenses, { ...newExp, id: Date.now(), amount: parseFloat(newExp.amount), involved: involvedUsers }]); setNewExp({ title: '', amount: '', payer: users[0] || '' }); setInvolvedUsers(users); setIsSaving(false); showToast("記帳成功"); };
+            const handleAddExpense = async () => { if (!newExp.title || !newExp.amount) return; setIsSaving(true); await setExpenses([...expenses, { ...newExp, id: newId(), amount: parseFloat(newExp.amount), involved: involvedUsers }]); setNewExp({ title: '', amount: '', payer: users[0] || '' }); setInvolvedUsers(users); setIsSaving(false); showToast("記帳成功"); };
             const confirmDeleteExpense = async () => { if (deleteTarget) { setIsSaving(true); await setExpenses(expenses.filter(e => e.id !== deleteTarget)); setIsSaving(false); showToast("已刪除"); setDeleteTarget(null); } };
 
             return (
@@ -834,7 +870,7 @@
             const [deleteTarget, setDeleteTarget] = useState(null);
             const [isSaving, setIsSaving] = useState(false);
             const typeMap = { transport: { icon: 'TrainFront', color: 'text-blue-500', bg: 'bg-blue-100', label: '交通' }, ticket: { icon: 'Ticket', color: 'text-green-500', bg: 'bg-green-100', label: '票券' }, spot: { icon: 'MapPin', color: 'text-red-500', bg: 'bg-red-100', label: '景點' }, shopping: { icon: 'ShoppingBag', color: 'text-orange-500', bg: 'bg-orange-100', label: '購物' } };
-            const handleAdd = async () => { if (!newGuide.title) return; setIsSaving(true); await setGuides([...guides, { ...newGuide, id: Date.now() }]); setIsSaving(false); setIsAdding(false); setNewGuide({ title: '', content: '', type: 'transport' }); showToast("攻略已新增"); };
+            const handleAdd = async () => { if (!newGuide.title) return; setIsSaving(true); await setGuides([...guides, { ...newGuide, id: newId() }]); setIsSaving(false); setIsAdding(false); setNewGuide({ title: '', content: '', type: 'transport' }); showToast("攻略已新增"); };
             const confirmDelete = async () => { if (deleteTarget) { setIsSaving(true); await setGuides(guides.filter(g => g.id !== deleteTarget)); setIsSaving(false); showToast("已刪除"); setDeleteTarget(null); } };
             return (
                 <div className="p-5 h-full relative z-10 animate-fade-in scroll-container page-enter">
@@ -935,8 +971,40 @@
             );
         };
 
+        class ErrorBoundary extends React.Component {
+            constructor(props) { super(props); this.state = { error: null }; }
+            static getDerivedStateFromError(error) { return { error }; }
+            componentDidCatch(error, info) { console.error('App crashed:', error, info); }
+            handleReload = () => { this.setState({ error: null }); window.location.reload(); };
+            render() {
+                if (!this.state.error) return this.props.children;
+                return (
+                    <div style={{
+                        position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column',
+                        alignItems: 'center', justifyContent: 'center', padding: 24, textAlign: 'center',
+                        background: 'var(--bg-color)', color: 'var(--text-main)', fontFamily: 'inherit'
+                    }}>
+                        <div style={{ fontSize: 56, marginBottom: 12 }}>🧭</div>
+                        <h2 style={{ fontWeight: 900, fontSize: 22, margin: '0 0 6px' }}>有點迷路了</h2>
+                        <p style={{ color: 'var(--text-sub)', fontSize: 14, maxWidth: 280, lineHeight: 1.6, margin: '0 0 24px' }}>
+                            畫面出了點小狀況。你的資料已安全儲存在雲端，重新整理就能繼續。
+                        </p>
+                        <button onClick={this.handleReload} className="btn-pill btn-primary px-6 py-3 shadow-lg">重新整理</button>
+                    </div>
+                );
+            }
+        }
+
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        root.render(<ErrorBoundary><App /></ErrorBoundary>);
+    </script>
+
+    <script>
+        if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(() => {});
+            });
+        }
     </script>
 </body>
 </html>
