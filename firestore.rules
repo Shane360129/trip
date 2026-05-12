@@ -1,0 +1,19 @@
+rules_version = '2';
+
+// Deploy via Firebase Console (Firestore → Rules) or `firebase deploy --only firestore:rules`
+service cloud.firestore {
+    match /databases/{database}/documents {
+
+        // Trip documents — require authenticated user (incl. anonymous).
+        // Anyone with a Trip ID and a valid anon-auth token can read/write.
+        // Tighten further later by enforcing membership lists.
+        match /trips/{tripId} {
+            allow read, write: if request.auth != null
+                && tripId.matches('^[a-zA-Z0-9_-]{1,64}$');
+        }
+
+        match /{document=**} {
+            allow read, write: if false;
+        }
+    }
+}
