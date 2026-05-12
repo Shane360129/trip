@@ -7,6 +7,11 @@ import { CoverChapter } from './chapters/CoverChapter';
 import { TocChapter } from './chapters/TocChapter';
 import { ItineraryChapter } from './chapters/ItineraryChapter';
 import { PackingChapter } from './chapters/PackingChapter';
+import { GuideChapter } from './chapters/GuideChapter';
+import { FoodChapter } from './chapters/FoodChapter';
+import { ShoppingChapter } from './chapters/ShoppingChapter';
+import { AlbumChapter } from './chapters/AlbumChapter';
+import { ExpenseChapter } from './chapters/ExpenseChapter';
 import { PlaceholderChapter } from './chapters/PlaceholderChapter';
 import { useTripStore, getLastTripId } from './store/tripStore';
 import { useUIStore } from './store/uiStore';
@@ -30,6 +35,11 @@ const renderChapter = (chapter: ChapterMeta, pageNo: number) => {
         case 'toc':       return <TocChapter key={chapter.id} chapter={chapter} pageNo={pageNo} />;
         case 'itinerary': return <ItineraryChapter key={chapter.id} chapter={chapter} pageNo={pageNo} />;
         case 'before':    return <PackingChapter key={chapter.id} chapter={chapter} pageNo={pageNo} />;
+        case 'guide':     return <GuideChapter key={chapter.id} chapter={chapter} pageNo={pageNo} />;
+        case 'food':      return <FoodChapter key={chapter.id} chapter={chapter} pageNo={pageNo} />;
+        case 'shopping':  return <ShoppingChapter key={chapter.id} chapter={chapter} pageNo={pageNo} />;
+        case 'album':     return <AlbumChapter key={chapter.id} chapter={chapter} pageNo={pageNo} />;
+        case 'expense':   return <ExpenseChapter key={chapter.id} chapter={chapter} pageNo={pageNo} />;
         default:          return <PlaceholderChapter key={chapter.id} chapter={chapter} pageNo={pageNo} />;
     }
 };
