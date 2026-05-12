@@ -6,6 +6,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { CoverChapter } from './chapters/CoverChapter';
 import { TocChapter } from './chapters/TocChapter';
 import { ItineraryChapter } from './chapters/ItineraryChapter';
+import { PackingChapter } from './chapters/PackingChapter';
 import { PlaceholderChapter } from './chapters/PlaceholderChapter';
 import { useTripStore, getLastTripId } from './store/tripStore';
 import { useUIStore } from './store/uiStore';
@@ -28,6 +29,7 @@ const renderChapter = (chapter: ChapterMeta, pageNo: number) => {
         case 'cover':     return <CoverChapter key={chapter.id} chapter={chapter} pageNo={pageNo} />;
         case 'toc':       return <TocChapter key={chapter.id} chapter={chapter} pageNo={pageNo} />;
         case 'itinerary': return <ItineraryChapter key={chapter.id} chapter={chapter} pageNo={pageNo} />;
+        case 'before':    return <PackingChapter key={chapter.id} chapter={chapter} pageNo={pageNo} />;
         default:          return <PlaceholderChapter key={chapter.id} chapter={chapter} pageNo={pageNo} />;
     }
 };
