@@ -76,7 +76,7 @@ export const AlbumChapter = ({ chapter, pageNo }: AlbumProps) => {
 
     return (
         <BookLayout chapter={chapter} pageNo={pageNo}>
-            <div className="max-w-md mx-auto pr-6 py-2">
+            <div className="w-full px-4 md:px-6 py-2 md:py-4">
                 <header className="mb-4">
                     <div
                         className="inline-block text-[10px] font-bold tracking-[0.35em] px-3 py-1 mb-2"

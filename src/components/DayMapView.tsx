@@ -173,8 +173,8 @@ export const DayMapView = ({ items, accentVar = 'accent', onItemClick, onResolve
     return (
         <div className="space-y-2">
             <div
-                className="paper-card overflow-hidden"
-                style={{ padding: 0, height: 360 }}
+                className="paper-card overflow-hidden h-[360px] md:h-[480px] lg:h-[560px]"
+                style={{ padding: 0 }}
             >
                 <div ref={containerRef} style={{ height: '100%', width: '100%' }} />
             </div>
