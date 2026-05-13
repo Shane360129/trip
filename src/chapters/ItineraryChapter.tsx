@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Plus, Trash2, Navigation2, Clock } from 'lucide-react';
+import { MapPin, Plus, Trash2, Navigation2, Clock, List as ListIcon, Map as MapIcon } from 'lucide-react';
 import { BookLayout } from '../components/BookLayout';
 import { ConfirmModal } from '../components/ConfirmModal';
+import { DayMapView } from '../components/DayMapView';
 import { useTripStore } from '../store/tripStore';
 import { useUIStore } from '../store/uiStore';
 import { CHAPTER_HEADER_EN } from '../components/chapterMeta';
@@ -27,8 +28,10 @@ export const ItineraryChapter = ({ chapter, pageNo }: ItineraryProps) => {
     const update = useTripStore((s) => s.update);
     const showToast = useUIStore((s) => s.showToast);
     const editMode = useUIStore((s) => s.editMode);
+    const readOnly = useUIStore((s) => s.readOnly);
 
     const [selectedDay, setSelectedDay] = useState(1);
+    const [view, setView] = useState<'list' | 'map'>('list');
     const [draft, setDraft] = useState<ItineraryItem | null>(null);
     const [isNew, setIsNew] = useState(false);
     const [deleteId, setDeleteId] = useState<string | number | null>(null);
@@ -75,6 +78,15 @@ export const ItineraryChapter = ({ chapter, pageNo }: ItineraryProps) => {
         showToast('已刪除');
     };
 
+    const handleResolved = useCallback(
+        async (resolvedDayItems: ItineraryItem[]) => {
+            const byId = new Map(resolvedDayItems.map((i) => [String(i.id), i]));
+            const next = trip.itinerary.map((i) => byId.get(String(i.id)) ?? i);
+            await update('itinerary', next);
+        },
+        [trip.itinerary, update],
+    );
+
     return (
         <BookLayout chapter={chapter} pageNo={pageNo}>
             <div className="max-w-md mx-auto pr-6 py-2">
@@ -89,9 +101,11 @@ export const ItineraryChapter = ({ chapter, pageNo }: ItineraryProps) => {
                         <h1 className="font-display text-3xl font-black tracking-tight" style={{ color: 'var(--ink)' }}>
                             行程
                         </h1>
-                        <button onClick={openNew} className="btn btn-primary px-3 py-2 text-sm">
-                            <Plus size={16} /> 新增
-                        </button>
+                        {!readOnly && (
+                            <button onClick={openNew} className="btn btn-primary px-3 py-2 text-sm">
+                                <Plus size={16} /> 新增
+                            </button>
+                        )}
                     </div>
                     {dayInfo && (
                         <p className="text-xs mt-1" style={{ color: 'var(--ink-soft)' }}>
@@ -101,7 +115,7 @@ export const ItineraryChapter = ({ chapter, pageNo }: ItineraryProps) => {
                 </header>
 
                 {/* Day tabs */}
-                <div className="flex gap-2 overflow-x-auto pb-3 mb-4 -mx-2 px-2" style={{ scrollSnapType: 'x mandatory' }}>
+                <div className="flex gap-2 overflow-x-auto pb-3 mb-3 -mx-2 px-2" style={{ scrollSnapType: 'x mandatory' }}>
                     {days.map((d) => {
                         const active = selectedDay === d.day;
                         return (
@@ -125,13 +139,55 @@ export const ItineraryChapter = ({ chapter, pageNo }: ItineraryProps) => {
                     })}
                 </div>
 
-                {items.length === 0 ? (
+                {/* List / Map view toggle */}
+                <div
+                    className="flex items-center gap-1 p-1 mb-4 rounded-full w-fit"
+                    style={{ background: 'var(--paper-soft)', border: '1px solid var(--paper-edge)' }}
+                    role="tablist"
+                    aria-label="檢視模式"
+                >
+                    <button
+                        role="tab"
+                        aria-selected={view === 'list'}
+                        onClick={() => setView('list')}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold transition"
+                        style={{
+                            background: view === 'list' ? 'var(--accent)' : 'transparent',
+                            color: view === 'list' ? 'white' : 'var(--ink-soft)',
+                        }}
+                    >
+                        <ListIcon size={12} /> 清單
+                    </button>
+                    <button
+                        role="tab"
+                        aria-selected={view === 'map'}
+                        onClick={() => setView('map')}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold transition"
+                        style={{
+                            background: view === 'map' ? 'var(--accent)' : 'transparent',
+                            color: view === 'map' ? 'white' : 'var(--ink-soft)',
+                        }}
+                    >
+                        <MapIcon size={12} /> 地圖
+                    </button>
+                </div>
+
+                {view === 'map' ? (
+                    <DayMapView
+                        items={items}
+                        accentVar={dayInfo?.isWeekend ? 'accent-3' : 'accent-2'}
+                        onItemClick={readOnly ? undefined : (it) => openEdit(it as ItineraryItem)}
+                        onResolved={readOnly ? undefined : handleResolved}
+                    />
+                ) : items.length === 0 ? (
                     <div className="text-center py-16">
                         <Clock size={36} className="mx-auto mb-2 opacity-40" />
                         <p className="text-sm font-bold" style={{ color: 'var(--ink-soft)' }}>這一天還沒有行程</p>
-                        <button onClick={openNew} className="btn btn-ghost mt-3 text-sm" style={{ background: 'var(--paper-soft)' }}>
-                            <Plus size={14} /> 新增第一個
-                        </button>
+                        {!readOnly && (
+                            <button onClick={openNew} className="btn btn-ghost mt-3 text-sm" style={{ background: 'var(--paper-soft)' }}>
+                                <Plus size={14} /> 新增第一個
+                            </button>
+                        )}
                     </div>
                 ) : (
                     <ol className="relative">
@@ -146,8 +202,8 @@ export const ItineraryChapter = ({ chapter, pageNo }: ItineraryProps) => {
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ duration: 0.3, delay: idx * 0.04 }}
-                                className="relative pl-10 pb-5 cursor-pointer group"
-                                onClick={() => openEdit(item)}
+                                className={`relative pl-10 pb-5 group ${readOnly ? '' : 'cursor-pointer'}`}
+                                onClick={() => { if (!readOnly) openEdit(item); }}
                             >
                                 <span
                                     className="absolute left-[10px] top-1.5 w-4 h-4 rounded-full border-2"

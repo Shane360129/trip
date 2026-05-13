@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { doc, onSnapshot, setDoc, type Unsubscribe } from 'firebase/firestore';
 import { db } from '../firebase';
+import { useUIStore } from './uiStore';
 import { migrateTrip, DEFAULT_TRIP } from '../utils/migrate';
 import type { Trip, TripField } from '../types';
 
@@ -50,7 +51,11 @@ export const useTripStore = create<TripStore>((set, get) => ({
 
         const local = readLocal(tripId);
         set({ tripId, trip: local, isLoaded: false, error: null, _unsub: null });
-        try { localStorage.setItem(LS_TRIP_KEY, tripId); } catch { /* ignore */ }
+        // Don't remember read-only viewer sessions — refreshing the share link
+        // host page should go back to Landing, not silently resume.
+        if (!useUIStore.getState().readOnly) {
+            try { localStorage.setItem(LS_TRIP_KEY, tripId); } catch { /* ignore */ }
+        }
 
         const ref = doc(db, 'trips', tripId);
         const unsub = onSnapshot(
@@ -60,10 +65,12 @@ export const useTripStore = create<TripStore>((set, get) => ({
                     const migrated = migrateTrip(snap.data() as Partial<Trip>);
                     writeLocal(tripId, migrated);
                     set({ trip: migrated, isLoaded: true, _localOnly: false });
-                } else {
+                } else if (!useUIStore.getState().readOnly) {
                     setDoc(ref, DEFAULT_TRIP, { merge: true }).catch(() => {
                         set({ _localOnly: true });
                     });
+                    set({ isLoaded: true });
+                } else {
                     set({ isLoaded: true });
                 }
             },
@@ -78,10 +85,12 @@ export const useTripStore = create<TripStore>((set, get) => ({
     leaveTrip: () => {
         get()._unsub?.();
         set({ tripId: null, trip: DEFAULT_TRIP, isLoaded: false, _unsub: null });
+        useUIStore.getState().setReadOnly(false);
         try { localStorage.removeItem(LS_TRIP_KEY); } catch { /* ignore */ }
     },
 
     update: async (field, value) => {
+        if (useUIStore.getState().readOnly) return;
         const { tripId, trip } = get();
         const nextTrip = { ...trip, [field]: value };
         set({ trip: nextTrip, isSyncing: true });
@@ -97,6 +106,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     },
 
     patch: async (partial) => {
+        if (useUIStore.getState().readOnly) return;
         const { tripId, trip } = get();
         const nextTrip = { ...trip, ...partial };
         set({ trip: nextTrip, isSyncing: true });
@@ -112,6 +122,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     },
 
     resetTrip: async () => {
+        if (useUIStore.getState().readOnly) return;
         const { tripId } = get();
         if (!tripId) return;
         await get().patch({

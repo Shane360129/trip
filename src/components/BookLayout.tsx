@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Settings as SettingsIcon, Palette, Pencil, PencilOff, Book } from 'lucide-react';
+import { Settings as SettingsIcon, Palette, Pencil, PencilOff, Book, Eye } from 'lucide-react';
 import { useUIStore } from '../store/uiStore';
 import { useTripStore } from '../store/tripStore';
 import { CHAPTER_SPINE_COLORS } from './chapterMeta';
@@ -14,6 +14,7 @@ interface BookLayoutProps {
 export const BookLayout = ({ chapter, pageNo, children }: BookLayoutProps) => {
     const direction = useUIStore((s) => s.direction);
     const editMode = useUIStore((s) => s.editMode);
+    const readOnly = useUIStore((s) => s.readOnly);
     const toggleEditMode = useUIStore((s) => s.toggleEditMode);
     const openThemeEditor = useUIStore((s) => s.openThemeEditor);
     const openSettings = useUIStore((s) => s.openSettings);
@@ -36,9 +37,17 @@ export const BookLayout = ({ chapter, pageNo, children }: BookLayoutProps) => {
             </header>
 
             <div className="absolute top-3 right-3 flex items-center gap-2 z-30" style={{ marginTop: 'var(--safe-top)' }}>
-                {isSyncing && (
+                {isSyncing && !readOnly && (
                     <span className="text-[10px] font-bold tracking-wider" style={{ color: 'var(--ink-soft)' }}>
                         SYNC...
+                    </span>
+                )}
+                {readOnly && (
+                    <span
+                        className="flex items-center gap-1 text-[10px] font-bold tracking-wider px-2 py-1 rounded-full"
+                        style={{ color: 'var(--ink-soft)', background: 'var(--paper-soft)', border: '1px solid var(--paper-edge)' }}
+                    >
+                        <Eye size={11} /> 預覽
                     </span>
                 )}
                 {tocChapter && chapter.type !== 'toc' && (
@@ -51,17 +60,21 @@ export const BookLayout = ({ chapter, pageNo, children }: BookLayoutProps) => {
                         <Book size={18} />
                     </button>
                 )}
-                <button
-                    onClick={toggleEditMode}
-                    className={`btn btn-ghost px-2 py-2 ${editMode ? 'text-[color:var(--accent)]' : ''}`}
-                    title={editMode ? '完成編輯' : '編輯'}
-                    aria-label="切換編輯模式"
-                >
-                    {editMode ? <PencilOff size={18} /> : <Pencil size={18} />}
-                </button>
-                <button onClick={openThemeEditor} className="btn btn-ghost px-2 py-2" title="主題" aria-label="主題">
-                    <Palette size={18} />
-                </button>
+                {!readOnly && (
+                    <button
+                        onClick={toggleEditMode}
+                        className={`btn btn-ghost px-2 py-2 ${editMode ? 'text-[color:var(--accent)]' : ''}`}
+                        title={editMode ? '完成編輯' : '編輯'}
+                        aria-label="切換編輯模式"
+                    >
+                        {editMode ? <PencilOff size={18} /> : <Pencil size={18} />}
+                    </button>
+                )}
+                {!readOnly && (
+                    <button onClick={openThemeEditor} className="btn btn-ghost px-2 py-2" title="主題" aria-label="主題">
+                        <Palette size={18} />
+                    </button>
+                )}
                 <button onClick={openSettings} className="btn btn-ghost px-2 py-2" title="設定" aria-label="設定">
                     <SettingsIcon size={18} />
                 </button>
