@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Star, Navigation2, Utensils, Camera } from 'lucide-react';
+import { Plus, Trash2, Star, Navigation2, Utensils, Camera, Search } from 'lucide-react';
 import { BookLayout } from '../components/BookLayout';
 import { ConfirmModal } from '../components/ConfirmModal';
+import { ImageUploader } from '../components/ImageUploader';
 import { useTripStore } from '../store/tripStore';
 import { useUIStore } from '../store/uiStore';
 import { CHAPTER_HEADER_EN } from '../components/chapterMeta';
@@ -264,28 +265,16 @@ export const FoodChapter = ({ chapter, pageNo }: FoodProps) => {
                                 />
                             </div>
                             <div>
-                                <label className="text-[10px] font-bold tracking-[0.2em] flex justify-between" style={{ color: 'var(--ink-soft)' }}>
-                                    <span>圖片網址</span>
-                                    <button onClick={searchImage} className="text-[10px] underline" style={{ color: 'var(--accent-3)' }}>
-                                        Google 找圖
+                                <label className="text-[10px] font-bold tracking-[0.2em] flex justify-between mb-1" style={{ color: 'var(--ink-soft)' }}>
+                                    <span>照片</span>
+                                    <button onClick={searchImage} className="text-[10px] underline flex items-center gap-1" style={{ color: 'var(--accent-3)' }}>
+                                        <Search size={10} /> Google 找圖
                                     </button>
                                 </label>
-                                <input
+                                <ImageUploader
                                     value={draft.photo ?? ''}
-                                    onChange={(e) => setDraft({ ...draft, photo: e.target.value })}
-                                    className="field mt-1"
-                                    placeholder="https://..."
+                                    onChange={(url) => setDraft({ ...draft, photo: url })}
                                 />
-                                {draft.photo && (
-                                    <div className="mt-2 w-20 h-20 rounded overflow-hidden" style={{ background: 'var(--paper)' }}>
-                                        <img
-                                            src={draft.photo}
-                                            alt=""
-                                            className="w-full h-full object-cover"
-                                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                                        />
-                                    </div>
-                                )}
                             </div>
                             <div>
                                 <label className="text-[10px] font-bold tracking-[0.2em] block mb-1" style={{ color: 'var(--ink-soft)' }}>星等</label>

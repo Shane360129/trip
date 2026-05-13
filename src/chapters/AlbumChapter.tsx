@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Trash2, Camera, X } from 'lucide-react';
 import { BookLayout } from '../components/BookLayout';
 import { ConfirmModal } from '../components/ConfirmModal';
+import { ImageUploader } from '../components/ImageUploader';
 import { useTripStore } from '../store/tripStore';
 import { useUIStore } from '../store/uiStore';
 import { CHAPTER_HEADER_EN } from '../components/chapterMeta';
@@ -185,23 +186,12 @@ export const AlbumChapter = ({ chapter, pageNo }: AlbumProps) => {
                         </h3>
                         <div className="space-y-3">
                             <div>
-                                <label className="text-[10px] font-bold tracking-[0.2em]" style={{ color: 'var(--ink-soft)' }}>圖片網址 *</label>
-                                <input
+                                <label className="text-[10px] font-bold tracking-[0.2em] mb-1 block" style={{ color: 'var(--ink-soft)' }}>照片 *</label>
+                                <ImageUploader
                                     value={draft.url}
-                                    onChange={(e) => setDraft({ ...draft, url: e.target.value })}
-                                    className="field mt-1"
-                                    placeholder="https://..."
+                                    onChange={(url) => setDraft({ ...draft, url })}
+                                    previewSize={140}
                                 />
-                                {draft.url && (
-                                    <div className="mt-2 w-full aspect-square rounded overflow-hidden" style={{ background: 'var(--paper)', maxHeight: 200 }}>
-                                        <img
-                                            src={draft.url}
-                                            alt=""
-                                            className="w-full h-full object-cover"
-                                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                                        />
-                                    </div>
-                                )}
                             </div>
                             <div>
                                 <label className="text-[10px] font-bold tracking-[0.2em]" style={{ color: 'var(--ink-soft)' }}>說明</label>

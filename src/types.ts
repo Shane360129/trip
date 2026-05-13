@@ -65,6 +65,7 @@ export interface ItineraryItem {
     note: string;
     photo?: string;
     rating?: number;
+    sortIndex?: number;
 }
 
 export interface Guide {

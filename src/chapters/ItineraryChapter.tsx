@@ -1,6 +1,23 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Plus, Trash2, Navigation2, Clock } from 'lucide-react';
+import { MapPin, Plus, Trash2, Navigation2, Clock, GripVertical } from 'lucide-react';
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+    useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { BookLayout } from '../components/BookLayout';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { useTripStore } from '../store/tripStore';
@@ -22,6 +39,127 @@ const emptyDraft = (): Omit<ItineraryItem, 'id' | 'day'> => ({
     note: '',
 });
 
+const compareItems = (a: ItineraryItem, b: ItineraryItem): number => {
+    const aHas = a.sortIndex !== undefined;
+    const bHas = b.sortIndex !== undefined;
+    if (aHas && bHas) return (a.sortIndex ?? 0) - (b.sortIndex ?? 0);
+    return (a.time || '99:99').localeCompare(b.time || '99:99');
+};
+
+const ItineraryRow = ({
+    item,
+    isWeekend,
+    editMode,
+    onEdit,
+    onDelete,
+}: {
+    item: ItineraryItem;
+    isWeekend: boolean;
+    editMode: boolean;
+    onEdit: () => void;
+    onDelete: () => void;
+}) => {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+        id: item.id as string,
+        disabled: !editMode,
+    });
+    const style: React.CSSProperties = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.4 : 1,
+    };
+
+    return (
+        <motion.li
+            ref={setNodeRef}
+            style={style}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+            className="relative pl-10 pb-5 cursor-pointer group"
+            onClick={onEdit}
+        >
+            <span
+                className="absolute left-[10px] top-1.5 w-4 h-4 rounded-full border-2"
+                style={{
+                    background: 'var(--paper-soft)',
+                    borderColor: isWeekend ? 'var(--accent-3)' : 'var(--accent-2)',
+                }}
+                aria-hidden
+            />
+            <div className="paper-card p-3">
+                <div className="flex items-baseline justify-between mb-1 gap-2">
+                    <span
+                        className="font-mono font-black text-lg px-2 py-0.5 rounded"
+                        style={{
+                            color: isWeekend ? 'var(--accent-3)' : 'var(--accent-2)',
+                            background: 'var(--paper)',
+                        }}
+                    >
+                        {item.time || '--:--'}
+                    </span>
+                    <div className="flex items-center gap-2">
+                        {editMode && (
+                            <button
+                                {...attributes}
+                                {...listeners}
+                                onClick={(e) => e.stopPropagation()}
+                                className="cursor-grab active:cursor-grabbing"
+                                style={{ color: 'var(--ink-soft)' }}
+                                aria-label="拖曳排序"
+                            >
+                                <GripVertical size={16} />
+                            </button>
+                        )}
+                        {editMode && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                                style={{ color: 'var(--stamp)' }}
+                                aria-label="刪除"
+                            >
+                                <Trash2 size={16} />
+                            </button>
+                        )}
+                    </div>
+                </div>
+                <h3 className="font-display text-lg font-bold mb-1" style={{ color: 'var(--ink)' }}>
+                    {item.title}
+                </h3>
+                {item.location && (
+                    <div
+                        className="flex items-center justify-between gap-2 mt-2 px-2 py-1.5 rounded text-xs"
+                        style={{ background: 'var(--paper)' }}
+                    >
+                        <span className="flex items-center gap-1 truncate" style={{ color: 'var(--ink-soft)' }}>
+                            <MapPin size={12} style={{ color: 'var(--stamp)' }} />
+                            {item.location}
+                        </span>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(
+                                    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}`,
+                                    '_blank'
+                                );
+                            }}
+                            className="btn btn-secondary text-[10px] px-2 py-0.5"
+                            style={{ borderRadius: 999 }}
+                            aria-label="在地圖查看"
+                        >
+                            <Navigation2 size={10} /> MAP
+                        </button>
+                    </div>
+                )}
+                {item.note && (
+                    <div className="sticky mt-2" style={{ ['--rot' as string]: '-0.6deg' }}>
+                        {item.note.split('\n').map((line, i) => <div key={i}>{line}</div>)}
+                    </div>
+                )}
+            </div>
+        </motion.li>
+    );
+};
+
 export const ItineraryChapter = ({ chapter, pageNo }: ItineraryProps) => {
     const trip = useTripStore((s) => s.trip);
     const update = useTripStore((s) => s.update);
@@ -34,15 +172,25 @@ export const ItineraryChapter = ({ chapter, pageNo }: ItineraryProps) => {
     const [deleteId, setDeleteId] = useState<string | number | null>(null);
     const [saving, setSaving] = useState(false);
 
-    const days = useMemo(() => generateDays(trip.settings.startDate, trip.settings.duration), [trip.settings.startDate, trip.settings.duration]);
+    const days = useMemo(
+        () => generateDays(trip.settings.startDate, trip.settings.duration),
+        [trip.settings.startDate, trip.settings.duration]
+    );
     const dayInfo = days[selectedDay - 1];
+
     const items = useMemo(
-        () => trip.itinerary.filter((i) => i.day === selectedDay).sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99')),
+        () => trip.itinerary.filter((i) => i.day === selectedDay).sort(compareItems),
         [trip.itinerary, selectedDay]
     );
 
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    );
+
     const openNew = () => {
-        setDraft({ ...emptyDraft(), id: newId(), day: selectedDay });
+        const maxIdx = items.reduce((acc, it) => Math.max(acc, it.sortIndex ?? -1), -1);
+        setDraft({ ...emptyDraft(), id: newId(), day: selectedDay, sortIndex: maxIdx + 1 });
         setIsNew(true);
     };
     const openEdit = (item: ItineraryItem) => { setDraft(item); setIsNew(false); };
@@ -73,6 +221,24 @@ export const ItineraryChapter = ({ chapter, pageNo }: ItineraryProps) => {
         setSaving(false);
         setDeleteId(null);
         showToast('已刪除');
+    };
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (!over || active.id === over.id) return;
+        const oldIndex = items.findIndex((i) => i.id === active.id);
+        const newIndex = items.findIndex((i) => i.id === over.id);
+        if (oldIndex < 0 || newIndex < 0) return;
+        const reordered = arrayMove(items, oldIndex, newIndex);
+        // Re-assign sortIndex 0..N for items in this day; leave other days alone.
+        const reorderedById = new Map<string | number, number>();
+        reordered.forEach((it, i) => reorderedById.set(it.id, i));
+        const next = trip.itinerary.map((it) =>
+            it.day === selectedDay && reorderedById.has(it.id)
+                ? { ...it, sortIndex: reorderedById.get(it.id) }
+                : it
+        );
+        update('itinerary', next);
     };
 
     return (
@@ -134,85 +300,35 @@ export const ItineraryChapter = ({ chapter, pageNo }: ItineraryProps) => {
                         </button>
                     </div>
                 ) : (
-                    <ol className="relative">
-                        <div
-                            className="absolute top-0 bottom-0 left-[18px] w-[2px]"
-                            style={{ background: 'var(--paper-edge)' }}
-                            aria-hidden
-                        />
-                        {items.map((item, idx) => (
-                            <motion.li
-                                key={item.id}
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.3, delay: idx * 0.04 }}
-                                className="relative pl-10 pb-5 cursor-pointer group"
-                                onClick={() => openEdit(item)}
-                            >
-                                <span
-                                    className="absolute left-[10px] top-1.5 w-4 h-4 rounded-full border-2"
-                                    style={{
-                                        background: 'var(--paper-soft)',
-                                        borderColor: dayInfo?.isWeekend ? 'var(--accent-3)' : 'var(--accent-2)',
-                                    }}
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                        <SortableContext items={items.map((i) => i.id as string)} strategy={verticalListSortingStrategy}>
+                            <ol className="relative">
+                                <div
+                                    className="absolute top-0 bottom-0 left-[18px] w-[2px]"
+                                    style={{ background: 'var(--paper-edge)' }}
                                     aria-hidden
                                 />
-                                <div className="paper-card p-3">
-                                    <div className="flex items-baseline justify-between mb-1">
-                                        <span
-                                            className="font-mono font-black text-lg px-2 py-0.5 rounded"
-                                            style={{
-                                                color: dayInfo?.isWeekend ? 'var(--accent-3)' : 'var(--accent-2)',
-                                                background: 'var(--paper)',
-                                            }}
-                                        >
-                                            {item.time || '--:--'}
-                                        </span>
-                                        {editMode && (
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); setDeleteId(item.id); }}
-                                                style={{ color: 'var(--stamp)' }}
-                                                aria-label="刪除"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        )}
-                                    </div>
-                                    <h3 className="font-display text-lg font-bold mb-1" style={{ color: 'var(--ink)' }}>
-                                        {item.title}
-                                    </h3>
-                                    {item.location && (
-                                        <div className="flex items-center justify-between gap-2 mt-2 px-2 py-1.5 rounded text-xs" style={{ background: 'var(--paper)' }}>
-                                            <span className="flex items-center gap-1 truncate" style={{ color: 'var(--ink-soft)' }}>
-                                                <MapPin size={12} style={{ color: 'var(--stamp)' }} />
-                                                {item.location}
-                                            </span>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}`, '_blank');
-                                                }}
-                                                className="btn btn-secondary text-[10px] px-2 py-0.5"
-                                                style={{ borderRadius: 999 }}
-                                                aria-label="在地圖查看"
-                                            >
-                                                <Navigation2 size={10} /> MAP
-                                            </button>
-                                        </div>
-                                    )}
-                                    {item.note && (
-                                        <div className="sticky mt-2" style={{ ['--rot' as string]: '-0.6deg' }}>
-                                            {item.note.split('\n').map((line, i) => <div key={i}>{line}</div>)}
-                                        </div>
-                                    )}
-                                </div>
-                            </motion.li>
-                        ))}
-                    </ol>
+                                {items.map((item) => (
+                                    <ItineraryRow
+                                        key={item.id}
+                                        item={item}
+                                        isWeekend={!!dayInfo?.isWeekend}
+                                        editMode={editMode}
+                                        onEdit={() => openEdit(item)}
+                                        onDelete={() => setDeleteId(item.id)}
+                                    />
+                                ))}
+                            </ol>
+                        </SortableContext>
+                        {editMode && (
+                            <p className="text-[11px] mt-2 text-center" style={{ color: 'var(--ink-soft)' }}>
+                                按住右側拖把可調整順序；時間仍會顯示在卡片上。
+                            </p>
+                        )}
+                    </DndContext>
                 )}
             </div>
 
-            {/* Edit / Add modal */}
             {draft && (
                 <div
                     className="fixed inset-0 z-[180] flex items-center justify-center p-4"
