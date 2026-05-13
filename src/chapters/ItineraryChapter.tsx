@@ -23,6 +23,17 @@ const emptyDraft = (): Omit<ItineraryItem, 'id' | 'day'> => ({
     note: '',
 });
 
+// Round any "HH:MM" string to the nearest 30-minute slot. Empty stays empty.
+const snapTo30 = (t: string): string => {
+    const m = /^(\d{1,2}):(\d{1,2})/.exec(t);
+    if (!m) return '';
+    let h = Math.max(0, Math.min(23, parseInt(m[1], 10)));
+    const mins = Math.max(0, Math.min(59, parseInt(m[2], 10)));
+    let snapped = Math.round(mins / 30) * 30;
+    if (snapped === 60) { snapped = 0; h = (h + 1) % 24; }
+    return `${String(h).padStart(2, '0')}:${String(snapped).padStart(2, '0')}`;
+};
+
 export const ItineraryChapter = ({ chapter, pageNo }: ItineraryProps) => {
     const trip = useTripStore((s) => s.trip);
     const update = useTripStore((s) => s.update);
@@ -56,6 +67,7 @@ export const ItineraryChapter = ({ chapter, pageNo }: ItineraryProps) => {
         setSaving(true);
         const cleaned: ItineraryItem = {
             ...draft,
+            time: snapTo30(draft.time),
             title: draft.title.trim(),
             location: draft.location.trim(),
             note: draft.note.trim(),
@@ -281,11 +293,16 @@ export const ItineraryChapter = ({ chapter, pageNo }: ItineraryProps) => {
                         </h3>
                         <div className="space-y-3">
                             <div>
-                                <label className="text-[10px] font-bold tracking-[0.2em]" style={{ color: 'var(--ink-soft)' }}>時間</label>
+                                <label className="text-[10px] font-bold tracking-[0.2em]" style={{ color: 'var(--ink-soft)' }}>時間（每 30 分鐘）</label>
                                 <input
                                     type="time"
+                                    step={1800}
                                     value={draft.time}
                                     onChange={(e) => setDraft({ ...draft, time: e.target.value })}
+                                    onBlur={(e) => {
+                                        const snapped = snapTo30(e.target.value);
+                                        if (snapped !== draft.time) setDraft({ ...draft, time: snapped });
+                                    }}
                                     className="field mt-1"
                                 />
                             </div>
