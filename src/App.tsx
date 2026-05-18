@@ -3,6 +3,8 @@ import { Landing } from './components/Landing';
 import { Toast } from './components/Toast';
 import { ThemeEditor } from './components/ThemeEditor';
 import { SettingsModal } from './components/SettingsModal';
+import { ShareModal } from './components/ShareModal';
+import { ReadOnlyBanner } from './components/ReadOnlyBanner';
 import { CoverChapter } from './chapters/CoverChapter';
 import { TocChapter } from './chapters/TocChapter';
 import { ItineraryChapter } from './chapters/ItineraryChapter';
@@ -55,13 +57,23 @@ export const App = () => {
     const enterTrip = useTripStore((s) => s.enterTrip);
     const currentChapter = useUIStore((s) => s.currentChapter);
     const goToChapter = useUIStore((s) => s.goToChapter);
+    const setReadOnly = useUIStore((s) => s.setReadOnly);
+    const readOnly = useUIStore((s) => s.readOnly);
 
-    // Auto-resume last trip
+    // Parse share URL params: ?trip=<id>&ro=1 auto-enters a trip in read-only mode.
     useEffect(() => {
         if (!authReady || tripId) return;
+        const params = new URLSearchParams(window.location.search);
+        const sharedId = params.get('trip');
+        const ro = params.get('ro') === '1';
+        if (sharedId && /^[a-zA-Z0-9_-]{1,64}$/.test(sharedId)) {
+            setReadOnly(ro);
+            enterTrip(sharedId);
+            return;
+        }
         const last = getLastTripId();
         if (last) enterTrip(last);
-    }, [authReady, tripId, enterTrip]);
+    }, [authReady, tripId, enterTrip, setReadOnly]);
 
     // Apply theme whenever any field of theme config changes
     useEffect(() => {
@@ -88,8 +100,10 @@ export const App = () => {
     return (
         <>
             {renderChapter(activeChapter, pageNo)}
-            <ThemeEditor />
+            {!readOnly && <ThemeEditor />}
             <SettingsModal />
+            <ShareModal />
+            <ReadOnlyBanner />
             <Toast />
         </>
     );
