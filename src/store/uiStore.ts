@@ -6,6 +6,8 @@ interface UIStore {
     editMode: boolean;
     themeEditorOpen: boolean;
     settingsOpen: boolean;
+    shareOpen: boolean;
+    readOnly: boolean;
     toast: { msg: string; visible: boolean };
 
     goToChapter: (chapterId: string, direction?: 1 | -1) => void;
@@ -15,6 +17,9 @@ interface UIStore {
     closeThemeEditor: () => void;
     openSettings: () => void;
     closeSettings: () => void;
+    openShare: () => void;
+    closeShare: () => void;
+    setReadOnly: (on: boolean) => void;
     showToast: (msg: string) => void;
 }
 
@@ -26,15 +31,20 @@ export const useUIStore = create<UIStore>((set) => ({
     editMode: false,
     themeEditorOpen: false,
     settingsOpen: false,
+    shareOpen: false,
+    readOnly: false,
     toast: { msg: '', visible: false },
 
     goToChapter: (chapterId, direction = 1) => set({ currentChapter: chapterId, direction }),
     setEditMode: (on) => set({ editMode: on }),
-    toggleEditMode: () => set((s) => ({ editMode: !s.editMode })),
+    toggleEditMode: () => set((s) => (s.readOnly ? s : { editMode: !s.editMode })),
     openThemeEditor: () => set({ themeEditorOpen: true }),
     closeThemeEditor: () => set({ themeEditorOpen: false }),
     openSettings: () => set({ settingsOpen: true }),
     closeSettings: () => set({ settingsOpen: false }),
+    openShare: () => set({ shareOpen: true }),
+    closeShare: () => set({ shareOpen: false }),
+    setReadOnly: (on) => set((s) => ({ readOnly: on, editMode: on ? false : s.editMode })),
     showToast: (msg) => {
         if (toastTimer) window.clearTimeout(toastTimer);
         set({ toast: { msg, visible: true } });

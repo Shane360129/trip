@@ -20,7 +20,7 @@ const PHASE_NOTES: Partial<Record<ChapterMeta['type'], string>> = {
 
 export const PlaceholderChapter = ({ chapter, pageNo }: PlaceholderProps) => (
     <BookLayout chapter={chapter} pageNo={pageNo}>
-        <div className="max-w-md mx-auto pr-6 py-6">
+        <div className="w-full px-4 md:px-6 py-6 md:py-8">
             <div
                 className="inline-block text-[10px] font-bold tracking-[0.35em] px-3 py-1 mb-3"
                 style={{ color: 'var(--ink-soft)', border: '1px solid var(--paper-edge)' }}

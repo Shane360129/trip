@@ -41,7 +41,7 @@ export const CoverChapter = ({ chapter, pageNo }: CoverProps) => {
 
     return (
         <BookLayout chapter={chapter} pageNo={pageNo}>
-            <div className="max-w-md mx-auto pr-6 py-4">
+            <div className="w-full px-4 md:px-6 py-4 md:py-6">
                 <div className="text-center">
                     <div
                         className="inline-block text-[10px] font-bold tracking-[0.35em] px-3 py-1 mb-4"
