@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Plus, Trash2, ShoppingBag, Image as ImageIcon, Search } from 'lucide-react';
 import { BookLayout } from '../components/BookLayout';
 import { ConfirmModal } from '../components/ConfirmModal';
+import { ImageUploader } from '../components/ImageUploader';
 import { useTripStore } from '../store/tripStore';
 import { useUIStore } from '../store/uiStore';
 import { CHAPTER_HEADER_EN } from '../components/chapterMeta';
@@ -236,28 +237,16 @@ export const ShoppingChapter = ({ chapter, pageNo }: ShoppingProps) => {
                                 />
                             </div>
                             <div>
-                                <label className="text-[10px] font-bold tracking-[0.2em] flex justify-between items-center" style={{ color: 'var(--ink-soft)' }}>
-                                    <span>圖片網址</span>
+                                <label className="text-[10px] font-bold tracking-[0.2em] flex justify-between items-center mb-1" style={{ color: 'var(--ink-soft)' }}>
+                                    <span>商品圖</span>
                                     <button onClick={searchImage} className="text-[10px] flex items-center gap-1 underline" style={{ color: 'var(--accent-3)' }}>
                                         <Search size={11} /> Google 找圖
                                     </button>
                                 </label>
-                                <input
+                                <ImageUploader
                                     value={draft.image}
-                                    onChange={(e) => setDraft({ ...draft, image: e.target.value })}
-                                    className="field mt-1"
-                                    placeholder="貼上圖片連結"
+                                    onChange={(url) => setDraft({ ...draft, image: url })}
                                 />
-                                {draft.image && (
-                                    <div className="mt-2 w-20 h-20 rounded overflow-hidden" style={{ background: 'var(--paper)' }}>
-                                        <img
-                                            src={draft.image}
-                                            alt=""
-                                            className="w-full h-full object-cover"
-                                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                                        />
-                                    </div>
-                                )}
                             </div>
                             <div>
                                 <label className="text-[10px] font-bold tracking-[0.2em]" style={{ color: 'var(--ink-soft)' }}>備註</label>

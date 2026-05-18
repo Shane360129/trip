@@ -65,9 +65,7 @@ export interface ItineraryItem {
     note: string;
     photo?: string;
     rating?: number;
-    lat?: number;
-    lng?: number;
-    geocodeFailed?: boolean;
+    sortIndex?: number;
 }
 
 export interface Guide {

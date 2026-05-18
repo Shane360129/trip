@@ -1,5 +1,6 @@
 import { MapPin, Quote as QuoteIcon, Lightbulb, Image as ImageIcon } from 'lucide-react';
 import type { Block } from '../../types';
+import { ImageUploader } from '../ImageUploader';
 
 interface BlockRendererProps {
     block: Block;
@@ -135,7 +136,7 @@ export const BlockRenderer = ({ block, editing, onChange }: BlockRendererProps) 
             if (editing) {
                 return (
                     <div className="polaroid" style={{ ['--rot' as string]: `${rotation}deg`, maxWidth: 280 }}>
-                        <div className="polaroid-img flex items-center justify-center" style={{ color: 'var(--ink-soft)' }}>
+                        <div className="polaroid-img">
                             {block.url ? (
                                 <img
                                     src={block.url}
@@ -143,15 +144,20 @@ export const BlockRenderer = ({ block, editing, onChange }: BlockRendererProps) 
                                     className="w-full h-full object-cover"
                                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                                 />
-                            ) : <ImageIcon size={32} className="opacity-50" />}
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center" style={{ color: 'var(--ink-soft)' }}>
+                                    <ImageIcon size={32} className="opacity-50" />
+                                </div>
+                            )}
                         </div>
-                        <input
-                            value={block.url}
-                            onChange={(e) => onChange({ ...block, url: e.target.value })}
-                            placeholder="圖片網址"
-                            className="bg-transparent w-full text-[10px] mt-2 outline-none border-b"
-                            style={{ borderColor: 'var(--paper-edge)', color: 'var(--ink-soft)' }}
-                        />
+                        <div className="mt-2">
+                            <ImageUploader
+                                value={block.url}
+                                onChange={(url) => onChange({ ...block, url })}
+                                hidePreview
+                                compact
+                            />
+                        </div>
                         <Editable
                             value={block.caption ?? ''}
                             placeholder="說明文字 ✨"

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Image as ImageIcon, Edit3 } from 'lucide-react';
 import { BookLayout } from '../components/BookLayout';
+import { ImageUploader } from '../components/ImageUploader';
 import { useTripStore } from '../store/tripStore';
 import { useUIStore } from '../store/uiStore';
 import { CHAPTER_HEADER_EN } from '../components/chapterMeta';
@@ -18,8 +19,8 @@ export const CoverChapter = ({ chapter, pageNo }: CoverProps) => {
     const editMode = useUIStore((s) => s.editMode);
     const goToChapter = useUIStore((s) => s.goToChapter);
     const showToast = useUIStore((s) => s.showToast);
-    const [photoDraft, setPhotoDraft] = useState('');
     const [askPhoto, setAskPhoto] = useState(false);
+    const [photoDraft, setPhotoDraft] = useState('');
 
     const tocChapter = trip.chapters.find((c) => c.type === 'toc');
     const nextChapter = trip.chapters
@@ -178,12 +179,11 @@ export const CoverChapter = ({ chapter, pageNo }: CoverProps) => {
                     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" style={{ background: 'rgba(40,30,20,0.45)', backdropFilter: 'blur(4px)' }} onClick={() => setAskPhoto(false)}>
                         <div className="paper-card w-full max-w-sm p-6" onClick={(e) => e.stopPropagation()}>
                             <h3 className="font-display text-lg font-black mb-3">封面照</h3>
-                            <input
+                            <ImageUploader
                                 value={photoDraft}
-                                onChange={(e) => setPhotoDraft(e.target.value)}
-                                placeholder="貼上圖片網址 (https://...)"
-                                className="field"
-                                autoFocus
+                                onChange={setPhotoDraft}
+                                placeholder="貼上圖片網址或上傳"
+                                previewSize={120}
                             />
                             <div className="flex gap-2 mt-4">
                                 <button onClick={() => setAskPhoto(false)} className="btn btn-ghost flex-1" style={{ background: 'var(--paper)' }}>取消</button>
